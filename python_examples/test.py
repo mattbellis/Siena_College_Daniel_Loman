@@ -6,3 +6,6 @@ y = np.cos(x)
 
 plt.plot(x,y)
 plt.show()
+
+
+#Edited code

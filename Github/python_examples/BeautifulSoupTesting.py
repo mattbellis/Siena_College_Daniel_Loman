@@ -14,11 +14,14 @@ soup=BeautifulSoup(data)
 count=0
 
 tables=soup.find_all('table')
+print tables
 
 class MyHTMLParser(HTMLParser):
     def handle_data(self,data):
-        rint data
+        print "data: ",data
+        #print len(data)
         
         
 parser=MyHTMLParser()
+print parser
 parser.feed(str(tables))

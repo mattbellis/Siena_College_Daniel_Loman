@@ -17,7 +17,7 @@ tables=soup.find_all('table')
 
 class MyHTMLParser(HTMLParser):
     def handle_data(self,data):
-        #print data
+        rint data
         
         
 parser=MyHTMLParser()

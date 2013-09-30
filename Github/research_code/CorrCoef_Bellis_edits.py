@@ -4,8 +4,7 @@ from numpy import matrix, linalg
 import math
 import pylab
 from pylab import *
-import glob
-import re
+import random
 
 
 datafiles = []
@@ -15,46 +14,113 @@ datafiles.append('../data/dataset2.txt')
 datafiles.append('../data/dataset3.txt')
 datafiles.append('../data/dataset4.txt')
 
+##### FINDING CORRELATION COEFFICIENTS #####
+
+N1=1000
+zeroes1=array([0.0]*N1)
+CorrCoefarray=array([zeroes1]*5)
+SD=array([0.0]*5)
 
 for count,datafile in enumerate(datafiles):
 
     infile = open(datafile,'r')       
     lines=infile.readlines()
 
-    N0=len(lines)
-    data0=matrix([[0.0]*2]*N0)
+    N=len(lines)
+    data=matrix([[0.0]*2]*N)
     index=0
 
-    for i in range(N0):
+    for i in range(N):
         content = np.array(lines[i].split()).astype('float')
-        data0[index,0] = content[0]
-        data0[index,1] = content[1]
+        data[index,0] = content[0]
+        data[index,1] = content[1]
         index=index+1
 
-    ### Dataset0 ###
+    ### Datasets ###
 
-    ave0=matrix([[0.0]*2]*1)
+    ave=matrix([[0.0]*2]*1)
 
-    for i in range(N0):
-        ave0[0,0]=ave0[0,0]+data0[i,0]
-        ave0[0,1]=ave0[0,1]+data0[i,1]
+    for i in range(N):
+        ave[0,0]=ave[0,0]+data[i,0]
+        ave[0,1]=ave[0,1]+data[i,1]
 
-    ave0=ave0/N0
-    normal0=data0-ave0
+    ave=ave/N
+    normal=data-ave
 
-    Cov0=normal0.T*normal0
+    Cov=normal.T*normal
 
-    Corr0=matrix([[0.0]*len(Cov0)]*len(Cov0.T))
+    Corr=matrix([[0.0]*len(Cov)]*len(Cov.T))
 
-    for i in range(len(Cov0)):
-        for j in range(len(Cov0.T)):
-            Corr0[i,j]=Cov0.T[i,j]/sqrt((Cov0.T[i,i]*Cov0.T[j,j]))
+    for i in range(len(Cov)):
+        for j in range(len(Cov.T)):
+            Corr[i,j]=Cov.T[i,j]/sqrt((Cov.T[i,i]*Cov.T[j,j]))
 
-    print Corr0[0,1]
+
+##### FINDING UNCERTAINTY #####
+            
+    zeroes=matrix([[0.0]*2]*N)
+    newmatrix=matrix([[0.0]*2]*N)
+    CorrCoefmatrix=array([0.0]*N1)
+    matrixarray=array([zeroes]*N1)
+    for i in range(N1):
+        for j in range(N):
+            a=random.randrange(0,N)
+            newmatrix[j,0]=data[a,0]
+            newmatrix[j,1]=data[a,1]
+
+        matrixarray[i]=newmatrix
+
+
+    for i in range(N1):
+    
+        ave=matrix([[0.0]*2]*1)
+
+        for j in range(N):
+            ave[0,0]=ave[0,0]+matrixarray[i][j,0]
+            ave[0,1]=ave[0,1]+matrixarray[i][j,1]
+    
+        ave=ave/N
+        normal=matrixarray[i]-ave
+    
+        Cov=normal.T*normal
+    
+        Corr1=matrix([[0.0]*len(Cov)]*len(Cov.T))
+    
+        for k in range(len(Cov)):
+            for l in range(len(Cov.T)):
+                Corr1[k,l]=Cov.T[k,l]/sqrt((Cov.T[k,k]*Cov.T[l,l]))
+
+        CorrCoefmatrix[i]=Corr1[0,1]
+    
+    CorrCoefarray[count]=CorrCoefmatrix
+
+    ave=0.0
+    
+    for i in range(N1):
+
+        ave=ave+CorrCoefarray[count][i]
+
+    
+    ave=ave/N1
+    normal=CorrCoefarray[count]-ave
+    for i in range(N1):
+        
+        SD[count]=SD[count]+normal[i]**2
+
+    SD[count]=math.sqrt(SD[count]/N1)
+        
+
+    #figure()
+    #pos=np.arange(len(CorrCoefarray[count]))
+    #pylab.bar(pos,CorrCoefarray[count])
+
+    
+
+    #print Corr0[0,1]
 
     figure()
-    plot(data0[:,0],data0[:,1],'+')
-    mytitle = "Dataset %d: %3.2f correlation" % (count, Corr0[0,1])
+    plot(data[:,0],data[:,1],'+')
+    mytitle = "Dataset %d: %3.2f correlation +- %3.3f" % (count, Corr[0,1], SD[count])
     title(mytitle)
     xlabel('x')
     ylabel('y')

@@ -6,8 +6,10 @@ from numpy import linalg, matrix, array
 import HTMLParser
 from HTMLParser import HTMLParser
 
+import numpy as np
 
-start=3
+
+start=2
 
 
 
@@ -42,6 +44,20 @@ for i in range(count-start-1):
     dataarray[i]=a[i+start]
 
 
+ncolumns = 14
+nvalues = len(dataarray)
+
+index = np.arange(0,nvalues,ncolumns)
+print index
+
+dataarray = array(dataarray)
+dataarray = dataarray[dataarray!='\xc2\xa0']
+print dataarray
+
+
+print dataarray[index]
+print dataarray[index+1]
+print dataarray[index+2]
 
 
 

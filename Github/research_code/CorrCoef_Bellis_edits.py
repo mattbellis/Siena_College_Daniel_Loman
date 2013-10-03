@@ -18,7 +18,8 @@ datafiles.append('../data/dataset4.txt')
 
 N1=1000
 bins=20
-zeroes1=array([0.0]*N1)
+#zeroes1=array([0.0]*N1)
+zeroes1=np.zeroes(N1)
 zeroes2=array([0.0]*int((N1*.68)))
 CorrCoefarray=array([zeroes1]*5)
 SD=array([0.0]*5)
@@ -27,6 +28,9 @@ range1=array([0.0]*5)
 
 for count,datafile in enumerate(datafiles):
 
+    ############################################################################
+    # Read in the data from the data files
+    ############################################################################
     infile = open(datafile,'r')       
     lines=infile.readlines()
 
@@ -39,6 +43,10 @@ for count,datafile in enumerate(datafiles):
         data[index,0] = content[0]
         data[index,1] = content[1]
         index=index+1
+
+    ############################################################################
+    # Finished reading in the data!
+    ############################################################################
 
     ### Datasets ###
 
@@ -60,8 +68,11 @@ for count,datafile in enumerate(datafiles):
             Corr[i,j]=Cov.T[i,j]/sqrt((Cov.T[i,i]*Cov.T[j,j]))
 
 
-##### FINDING UNCERTAINTY #####
+    ##### FINDING UNCERTAINTY #####
             
+    ############################################################################
+    # Create N1 fake data samples for the bootstrapping.
+    ############################################################################
     zeroes=matrix([[0.0]*2]*N)
     newmatrix=matrix([[0.0]*2]*N)
     CorrCoefmatrix=array([0.0]*(N1))
@@ -76,6 +87,9 @@ for count,datafile in enumerate(datafiles):
         matrixarray[i]=newmatrix
 
 
+    ############################################################################
+    # Calculate the corr coeff for *each* boostrap sample.
+    ############################################################################
     for i in range(N1):
     
         ave=matrix([[0.0]*2]*1)

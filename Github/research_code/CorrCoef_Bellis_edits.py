@@ -17,9 +17,13 @@ datafiles.append('../data/dataset4.txt')
 ##### FINDING CORRELATION COEFFICIENTS #####
 
 N1=1000
+bins=20
 zeroes1=array([0.0]*N1)
+zeroes2=array([0.0]*int((N1*.68)))
 CorrCoefarray=array([zeroes1]*5)
 SD=array([0.0]*5)
+range1=array([0.0]*5)
+
 
 for count,datafile in enumerate(datafiles):
 
@@ -60,7 +64,8 @@ for count,datafile in enumerate(datafiles):
             
     zeroes=matrix([[0.0]*2]*N)
     newmatrix=matrix([[0.0]*2]*N)
-    CorrCoefmatrix=array([0.0]*N1)
+    CorrCoefmatrix=array([0.0]*(N1))
+    CorrCoefsorted=array([0.0]*int((N1*.68)))
     matrixarray=array([zeroes]*N1)
     for i in range(N1):
         for j in range(N):
@@ -90,24 +95,35 @@ for count,datafile in enumerate(datafiles):
             for l in range(len(Cov.T)):
                 Corr1[k,l]=Cov.T[k,l]/sqrt((Cov.T[k,k]*Cov.T[l,l]))
 
-        CorrCoefmatrix[i]=Corr1[0,1]
-    
+            CorrCoefmatrix[i]=Corr1[0,1]
+
+
     CorrCoefarray[count]=CorrCoefmatrix
-
-    ave=0.0
     
-    for i in range(N1):
-
-        ave=ave+CorrCoefarray[count][i]
-
+    CorrCoefmatrix=sorted(CorrCoefmatrix)
     
-    ave=ave/N1
-    normal=CorrCoefarray[count]-ave
-    for i in range(N1):
+    for i in range(len(CorrCoefsorted)):
+        CorrCoefsorted[i]=CorrCoefmatrix[i+(int(N1*.16))]
+    
+
+    range1[count]=CorrCoefsorted[len(CorrCoefsorted)-1]-CorrCoefsorted[0]
+   
         
-        SD[count]=SD[count]+normal[i]**2
-
-    SD[count]=math.sqrt(SD[count]/N1)
+    
+##    ave=0.0
+    
+##    for i in range(N1):
+##
+##        ave=ave+CorrCoefarray[count][i]
+##
+##    
+##    ave=ave/N1
+##    normal=CorrCoefarray[count]-ave
+##    for i in range(N1):
+##        
+##        SD[count]=SD[count]+normal[i]**2
+##
+##    SD[count]=math.sqrt(SD[count]/N1)
         
 
     #figure()
@@ -118,13 +134,19 @@ for count,datafile in enumerate(datafiles):
 
     #print Corr0[0,1]
 
+
     figure()
     plot(data[:,0],data[:,1],'+')
-    mytitle = "Dataset %d: %3.2f correlation +- %3.3f" % (count, Corr[0,1], SD[count])
+    mytitle = "Dataset %d: %3.2f correlation +- %3.3f" % (count, Corr[0,1], range1[count])
     title(mytitle)
     xlabel('x')
     ylabel('y')
-        
+
+    figure()
+    hist(CorrCoefmatrix,bins=bins)
+    title("Bootstrap histogram for dataset " + str(count))
+    xlabel('Correlation Coefficient')
+    ylabel('Frequency')
 
 
 show()

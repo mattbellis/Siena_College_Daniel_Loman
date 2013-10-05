@@ -13,15 +13,19 @@ start=2
 
 
 
-r=requests.get('http://espn.go.com/nfl/statistics/player/_/stat/passing')
+r1=requests.get('http://www.nfl.com/stats/categorystats?archive=true&conference=null&role=TM&offensiveStatisticCategory=TEAM_PASSING&defensiveStatisticCategory=null&season=2012&seasonType=REG&tabSeq=2&qualified=false&Submit=Go')
+#r2.requests.get('http://www.nfl.com/stats/categorystats?archive=true&conference=null&role=TM&offensiveStatisticCategory=RUSHING&defensiveStatisticCategory=null&season=2012&seasonType=REG&tabSeq=2&qualified=false&Submit=Go')
 
-data1=r.content
+data1=r1.content
+#data2=r2.content
 
-soup=BeautifulSoup(data1)
+soup1=BeautifulSoup(data1)
+#soup2=BeautifulSoup(data2)
 
-tables=soup.find_all('table')
+tables1=soup1.find_all('table')
+#tables2=soup2.find_all('table')
 
-a = ["" for x in range(1000)]
+a1 = ["" for x in range(1000)]
 global count
 count=0
 
@@ -30,13 +34,13 @@ class MyHTMLParser(HTMLParser):
     def handle_data(self,data):
         global count
         print data
-        a[count]=data
+        a1[count]=data
         count = count + 1
        
         
 parser=MyHTMLParser()
-parser.feed(str(tables))
-b=parser.handle_data(str(tables))
+parser.feed(str(tables1))
+b=parser.handle_data(str(tables1))
 
 
 dataarray=["" for x in range(start,count-1)]

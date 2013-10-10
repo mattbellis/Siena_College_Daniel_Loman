@@ -26,8 +26,8 @@ def corr_coef(x):
 start=3
 
 var0='TEAM'
-passvar='YDS'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
-rushvar='YDS'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
+passvar='RATE'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
+rushvar='YDS/A'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
 
 years=['2012','2011','2010','2009','2008','2007','2006','2005','2004','2002']      #2002-2012
 

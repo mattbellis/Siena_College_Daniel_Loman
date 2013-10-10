@@ -9,6 +9,19 @@ import math
 import pylab
 from pylab import *
 
+import matplotlib.dates as mdates
+
+################################################################################
+# Example of a function
+################################################################################
+def corr_coef(x):
+
+    cc = len(x)
+
+    return cc
+
+
+################################################################################
 
 start=3
 
@@ -16,13 +29,16 @@ var0='TEAM'
 passvar='YDS'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
 rushvar='YDS'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
 
-years=['2012','2011','2010','2009','2008']      #2002-2012
+years=['2012','2011','2010','2009','2008','2007','2006','2005','2004','2002']      #2002-2012
 
 passingstat=matrix([[0.0]*len(years)]*32)
 rushingstat=matrix([[0.0]*len(years)]*32)
 winpercent=matrix([[0.0]*len(years)]*32)
 
 CorrCoef=matrix([[0.0]*2]*len(years))
+
+# Use this for the scatter plots.
+fig_passscatter = figure(figsize=(8,8))
 
 for year in range(len(years)):
 
@@ -252,6 +268,12 @@ for year in range(len(years)):
 
     winpercent[:,year]=datamatrix1[:,1]
 
+    # Plot the individual years for passing
+    fig_passscatter.add_subplot(4,4,year+1)
+    print winpercent
+    plot(winpercent[:,year],passingstat[:,year],'ko',markersize=5)
+
+
 
 
 
@@ -282,6 +304,8 @@ for year in range(len(years)):
     CorrPassWin=matrix([[0.0]*len(CovPassWin)]*len(CovPassWin.T))
     CorrRushWin=matrix([[0.0]*len(CovRushWin)]*len(CovRushWin.T))
 
+
+
     for i in range(len(CovPassWin)):
         for j in range(len(CovPassWin.T)):
             CorrPassWin[i,j]=CovPassWin.T[i,j]/math.sqrt((CovPassWin.T[i,i]*CovPassWin.T[j,j]))
@@ -294,20 +318,33 @@ for year in range(len(years)):
     
     CorrCoef[year,1]=CorrRushWin[0,1]
 
-years2=array([0.0]*len(years))
+years2=array([0.0]*len(years)).astype('int')
 for i in range(len(years)):
     years2[i]=float(years[i])
 
 
-plot(years2,CorrCoef[:,0])
+cc = corr_coef(years2)
+print "cc: %d" % (cc)
+
+
+
+fig = figure()
+plot(years2,CorrCoef[:,0],'ko')
 xlabel('year')
 ylabel('Correlation Coefficient')
 title('Correlation between pass '+ passvar +' and win percent')
+fmt_xdata = mdates.DateFormatter('%Y')
+fig.autofmt_xdate()
+ylim(-1.0,1.0)
+xlim(min(years2)-1,max(years2)+1)
+
 figure()
 
-plot(years2,CorrCoef[:,1])
+plot(years2,CorrCoef[:,1],'ko')
 xlabel('year')
 ylabel('Correlation Coefficient')
 title('Correlation between rush '+ rushvar + ' and win percent')
+ylim(-1.0,1.0)
+xlim(min(years2)-1,max(years2)+1)
 
 show()

@@ -5,58 +5,309 @@ import numpy as np
 from numpy import linalg, matrix, array
 import HTMLParser
 from HTMLParser import HTMLParser
+import math
+import pylab
+from pylab import *
 
 
-start=2
+start=3
 
-r1=requests.get('http://espn.go.com/nfl/statistics/team/_/stat/passing/year/2012')
-#r2.requests.get('http://www.nfl.com/stats/categorystats?archive=true&conference=null&role=TM&offensiveStatisticCategory=RUSHING&defensiveStatisticCategory=null&season=2012&seasonType=REG&tabSeq=2&qualified=false&Submit=Go')
+var0='TEAM'
+passvar='YDS'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
+rushvar='YDS'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
 
-data1=r1.content
-#data2=r2.content
+years=['2012','2011','2010','2009','2008']      #2002-2012
 
-soup1=BeautifulSoup(data1)
-#soup2=BeautifulSoup(data2)
+passingstat=matrix([[0.0]*len(years)]*32)
+rushingstat=matrix([[0.0]*len(years)]*32)
+winpercent=matrix([[0.0]*len(years)]*32)
 
-tables1=soup1.find_all('table')
-#tables2=soup2.find_all('table')
+CorrCoef=matrix([[0.0]*2]*len(years))
 
-a1 = ["" for x in range(6000)]
-global count
-count=0
+for year in range(len(years)):
 
-class MyHTMLParser(HTMLParser):
+    #####################################################
+    #            ####PASSING STATISTICS####             #
+    #####################################################
     
-    def handle_data(self,data):
-        global count
-        #print data
-        a1[count]=data
-        count = count + 1
+    r=requests.get('http://espn.go.com/nfl/statistics/team/_/stat/passing/year/'+years[year])
+
+    data=r.content
+
+    soup=BeautifulSoup(data)
+
+    tables=soup.find_all('table')
+
+    a = ["" for x in range(6000)]
+
+    global count
+    count=0
+
+    class MyHTMLParser(HTMLParser):
+
+        def handle_data(self,data):
+            global count
+            #print data
+            a[count]=data
+            count = count + 1
        
         
-parser=MyHTMLParser()
-parser.feed(str(tables1))
-b=parser.handle_data(str(tables1))
+    parser=MyHTMLParser()
+    parser.feed(str(tables))
+    b=parser.handle_data(str(tables))
 
 
-dataarray=["" for x in range(start,count-1)]
-for i in range(count-start-1):
-    dataarray[i]=a1[i+start]
+    dataarray=["" for x in range(start,count-1)]
+    for i in range(count-start-1):
+        dataarray[i]=a[i+start]
 
-dataarray=array(dataarray)
+    dataarray=array(dataarray)
 
 
-ncols=14
-nvalues=len(dataarray)-ncols
-for i in range(ncols):
-    if(dataarray[i]=='YDS'):
-        index=i
+    ncols=14
+    nrows=32
 
-indexes=np.arange(0,nvalues,ncols)
-datamatrix=matrix([[0.0]*ncols]*32)
+    nvalues=len(dataarray)-ncols
+    for i in range(ncols):
+        if(dataarray[i]=='TEAM'):
+            index0=i
+        if(dataarray[i]==passvar):
+            index1=i
 
-for i in range(ncols):
-    datamatrix[:,i]=dataarray[indexes+i]
+    indexes=np.arange(0,nvalues,ncols)
+    datamatrix=matrix([["      "]*2]*(nrows))
+    datamatrix1=matrix([["      "]*2]*(nrows))
+
+    c=np.delete(dataarray[indexes+index0],0,None)
+    d=np.delete(dataarray[indexes+index1],0,None)
+
+    for i in range(len(c)):
+        datamatrix[i,0]=c[i]
+        datamatrix[i,1]=d[i]
+
+    count1=0
+    for a in sorted(datamatrix[:,0]):
+        for i in range(32):
+            if(a==datamatrix[i,0]):
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+            
+
+    passingstat[:,year]=datamatrix1[:,1]
+
+
+
+
+    #####################################################   
+    #            ####RUSHING STATISTICS####             #
+    #####################################################
+
+
+    r=requests.get('http://espn.go.com/nfl/statistics/team/_/stat/rushing/year/'+years[year])
+
+    data=r.content
+
+    soup=BeautifulSoup(data)
+
+    tables=soup.find_all('table')
+
+    a = ["" for x in range(6000)]
+
+    count=0
+
+    class MyHTMLParser(HTMLParser):
+
+        def handle_data(self,data):
+            global count
+            #print data
+            a[count]=data
+            count = count + 1
+       
+        
+    parser=MyHTMLParser()
+    parser.feed(str(tables))
+    b=parser.handle_data(str(tables))
+
+
+    dataarray=["" for x in range(start,count-1)]
+    for i in range(count-start-1):
+        dataarray[i]=a[i+start]
+
+    dataarray=array(dataarray)
+
+
+    ncols=10
+    nrows=32
+
+    nvalues=len(dataarray)-ncols
+    for i in range(ncols):
+        if(dataarray[i]=='TEAM'):
+            index0=i
+        if(dataarray[i]==rushvar):
+            index1=i
+
+    indexes=np.arange(0,nvalues,ncols)
+    datamatrix=matrix([["      "]*2]*(nrows))
+    datamatrix1=matrix([["      "]*2]*(nrows))
+
+    c=np.delete(dataarray[indexes+index0],0,None)
+    d=np.delete(dataarray[indexes+index1],0,None)
+
+    for i in range(len(c)):
+        datamatrix[i,0]=c[i]
+        datamatrix[i,1]=d[i]
+
+    count1=0
+    for a in sorted(datamatrix[:,0]):
+        for i in range(32):
+            if(a==datamatrix[i,0]):
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+            
+
+    rushingstat[:,year]=datamatrix1[:,1]
+
+
+
+    #####################################################   
+    #               ####WIN PERCENTAGE####              #
+    #####################################################
+
+
+
+    r=requests.get('http://espn.go.com/nfl/standings/_/year/'+years[year])
+
+    data=r.content
+
+    soup=BeautifulSoup(data)
+
+    tables=soup.find_all('table')
+
+    a = ["" for x in range(6000)]
+
+    count=0
+
+    class MyHTMLParser(HTMLParser):
+
+        def handle_data(self,data):
+            global count
+            #print data
+            a[count]=data
+            count = count + 1
+       
+        
+    parser=MyHTMLParser()
+    parser.feed(str(tables))
+    b=parser.handle_data(str(tables))
+
+
+    dataarray=["" for x in range(start,count-1)]
+    for i in range(count-start-1):
+        dataarray[i]=a[i+start]
+
+    dataarray=array(dataarray)
+
+    dataarray = dataarray[dataarray!='\n']
+    dataarray = dataarray[dataarray!='American Football Conference']
+    dataarray = dataarray[dataarray!='x - ']
+    dataarray = dataarray[dataarray!='y - ']
+    dataarray = dataarray[dataarray!='z - ']
+    dataarray = dataarray[dataarray!='* - ']
+
+
+    ncols=13
+    nrows=32
+
+    nvalues=len(dataarray)-ncols
+    for i in range(ncols):
+        if(dataarray[i]=='NFC EAST'):
+            index0=i
+        if(dataarray[i]=='PCT'):
+            index1=i
+
+    indexes=np.arange(0,nvalues,ncols)
+    indexes1=np.arange(0,40,5)
+
+    datamatrix=matrix([["      "]*2]*(nrows))
+    datamatrix1=matrix([["      "]*2]*(nrows))
+
+    c=dataarray[indexes+index0]
+    c=np.delete(c,indexes1,None)
+
+    d=dataarray[indexes+index1]
+    d=np.delete(d,indexes1,None)
+
+
+    for i in range(len(c)):
+        datamatrix[i,0]=c[i]
+        datamatrix[i,1]=d[i]
+
+    count1=0
+    for a in sorted(datamatrix[:,0]):
+        for i in range(32):
+            if(a==datamatrix[i,0]):
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+
+
+    winpercent[:,year]=datamatrix1[:,1]
+
+
+
+
+for year in range(len(years)):
+
+    normalPassWin=matrix([[0.0]*2]*32)
+    normalRushWin=matrix([[0.0]*2]*32)
     
 
+    ### Datasets ###
 
+    ave=matrix([[0.0]*3]*1)
+
+    for i in range(32):
+        ave[0,0]=ave[0,0]+passingstat[i,year]
+        ave[0,1]=ave[0,1]+rushingstat[i,year]
+        ave[0,2]=ave[0,2]+winpercent[i,year]
+
+    ave=ave/32
+    normalPassWin[:,0]=passingstat[:,year]-ave[0,0]
+    normalPassWin[:,1]=winpercent[:,year]-ave[0,2]
+    normalRushWin[:,0]=rushingstat[:,year]-ave[0,1]
+    normalRushWin[:,1]=winpercent[:,year]-ave[0,2]
+
+    CovPassWin=normalPassWin.T*normalPassWin
+    CovRushWin=normalRushWin.T*normalRushWin
+
+    CorrPassWin=matrix([[0.0]*len(CovPassWin)]*len(CovPassWin.T))
+    CorrRushWin=matrix([[0.0]*len(CovRushWin)]*len(CovRushWin.T))
+
+    for i in range(len(CovPassWin)):
+        for j in range(len(CovPassWin.T)):
+            CorrPassWin[i,j]=CovPassWin.T[i,j]/math.sqrt((CovPassWin.T[i,i]*CovPassWin.T[j,j]))
+
+    CorrCoef[year,0]=CorrPassWin[0,1]
+
+    for i in range(len(CovRushWin)):
+        for j in range(len(CovRushWin.T)):
+            CorrRushWin[i,j]=CovRushWin.T[i,j]/math.sqrt((CovRushWin.T[i,i]*CovRushWin.T[j,j]))
+    
+    CorrCoef[year,1]=CorrRushWin[0,1]
+
+years2=array([0.0]*len(years))
+for i in range(len(years)):
+    years2[i]=float(years[i])
+
+
+plot(years2,CorrCoef[:,0])
+xlabel('year')
+ylabel('Correlation Coefficient')
+title('Correlation between pass '+ passvar +' and win percent')
+figure()
+
+plot(years2,CorrCoef[:,1])
+xlabel('year')
+ylabel('Correlation Coefficient')
+title('Correlation between rush '+ rushvar + ' and win percent')
+
+show()

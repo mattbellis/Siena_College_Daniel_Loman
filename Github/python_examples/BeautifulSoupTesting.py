@@ -8,34 +8,117 @@ from HTMLParser import HTMLParser
 import math
 import pylab
 from pylab import *
+import random
 
 import matplotlib.dates as mdates
 
-################################################################################
-# Example of a function
-################################################################################
-def corr_coef(x):
-
-    cc = len(x)
-
-    return cc
-
-
-################################################################################
 
 start=3
 
 var0='TEAM'
-passvar='RATE'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
-rushvar='YDS/A'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
+passvar='PCT'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
+rushvar='FUM'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
 
-years=['2012','2011','2010','2009','2008','2007','2006','2005','2004','2002']      #2002-2012
+years=['2012','2011','2010','2009','2008','2007','2006','2005','2004','2003','2002']      #2002-2012
 
 passingstat=matrix([[0.0]*len(years)]*32)
 rushingstat=matrix([[0.0]*len(years)]*32)
 winpercent=matrix([[0.0]*len(years)]*32)
 
+N=1000
+
 CorrCoef=matrix([[0.0]*2]*len(years))
+global CorrCoef1
+
+
+################################################################################
+# Correlation Coefficient function
+################################################################################
+
+def corr_coef(data1,data2):
+       
+    CorrCoef1=matrix([[0.0]*1]*N)
+  
+    normal=matrix([[0.0]*2]*len(data1))       #normalized pass/win pct data
+
+    ave=matrix([[0.0]*2]*1)             #finding the mean of each dataset
+
+    for i in range(len(normal)):
+        ave[0,0]=ave[0,0]+data1[i]
+        ave[0,1]=ave[0,1]+data2[i]
+
+    ave=ave/32
+    for i in range(32):
+        normal[i,0]=data1[i]-ave[0,0]
+        normal[i,1]=data2[i]-ave[0,1]
+
+    Cov=normal.T*normal                          #Covariance matrix of 2 data sets
+
+ 
+    Corr=matrix([[0.0]*len(Cov)]*len(Cov.T))      #Correlation matrix of 2 data sets
+
+
+    for i in range(len(Cov)):
+        for j in range(len(Cov.T)):
+            Corr[i,j]=Cov.T[i,j]/math.sqrt((Cov.T[i,i]*Cov.T[j,j]))
+
+    global CorrCoef1
+    CorrCoef1[0]=Corr[0,1]
+    
+    
+
+
+################################################################################
+# Bootstrap method function
+################################################################################
+
+ranges=matrix([[0.0]*2]*len(years))
+ranges1=matrix([[0.0]*1]*len(years))
+zeroes=np.zeros(N)
+CorrCoefarray=array([zeroes]*len(years))
+
+def bootstrap(data1,data2):
+
+    data=matrix([[0.0]*2]*32)
+    data[:,0]=data1
+    data[:,1]=data2
+
+    ############################################################################
+    # Create N1 fake data samples for the bootstrapping.
+    ############################################################################
+    zeroes=matrix([[0.0]*2]*32)
+    newmatrix=matrix([[0.0]*2]*32)
+    CorrCoefmatrix=matrix([[0.0]*1]*N)
+    CorrCoefsorted=matrix([[0.0]*1]*int((N*.68)))
+    matrixarray=array([zeroes]*N)
+    for i in range(N):
+        for j in range(32):
+            a=random.randrange(0,32)
+            newmatrix[j,0]=data[a,0]
+            newmatrix[j,1]=data[a,1]
+
+        matrixarray[i]=newmatrix
+        
+    global CorrCoef1
+
+    ############################################################################
+    # Calculate the corr coeff for *each* boostrap sample.
+    ############################################################################
+    for i in range(N):
+
+        corr_coef(matrixarray[i,:,0].T,matrixarray[i,:,1].T)
+        CorrCoefmatrix[i]=CorrCoef1[0]
+
+    
+    CorrCoefmatrix=sorted(CorrCoefmatrix)
+    
+    for i in range(len(CorrCoefsorted)):
+        CorrCoefsorted[i]=CorrCoefmatrix[i+(int(N*.16))]
+    
+    ranges1[year,0]=(CorrCoefsorted[len(CorrCoefsorted)-1]-CorrCoefsorted[0])/2
+
+
+################################################################################
 
 # Use this for the scatter plots.
 fig_passscatter = figure(figsize=(8,8))
@@ -270,61 +353,33 @@ for year in range(len(years)):
 
     # Plot the individual years for passing
     fig_passscatter.add_subplot(4,4,year+1)
-    print winpercent
+    #print winpercent
     plot(winpercent[:,year],passingstat[:,year],'ko',markersize=5)
+    title(years[year])
+    xlabel('win PCT')
+    ylabel(passvar)
 
 
 
 
 
 for year in range(len(years)):
-
-    normalPassWin=matrix([[0.0]*2]*32)
-    normalRushWin=matrix([[0.0]*2]*32)
-    
-
-    ### Datasets ###
-
-    ave=matrix([[0.0]*3]*1)
-
-    for i in range(32):
-        ave[0,0]=ave[0,0]+passingstat[i,year]
-        ave[0,1]=ave[0,1]+rushingstat[i,year]
-        ave[0,2]=ave[0,2]+winpercent[i,year]
-
-    ave=ave/32
-    normalPassWin[:,0]=passingstat[:,year]-ave[0,0]
-    normalPassWin[:,1]=winpercent[:,year]-ave[0,2]
-    normalRushWin[:,0]=rushingstat[:,year]-ave[0,1]
-    normalRushWin[:,1]=winpercent[:,year]-ave[0,2]
-
-    CovPassWin=normalPassWin.T*normalPassWin
-    CovRushWin=normalRushWin.T*normalRushWin
-
-    CorrPassWin=matrix([[0.0]*len(CovPassWin)]*len(CovPassWin.T))
-    CorrRushWin=matrix([[0.0]*len(CovRushWin)]*len(CovRushWin.T))
+    bootstrap(passingstat[:,year],winpercent[:,year])
+    corr_coef(passingstat[:,year],winpercent[:,year])
+    CorrCoef[year,0]=CorrCoef1[0]
+    ranges[year,0]=ranges1[year]
 
 
+for year in range(len(years)):
+    bootstrap(rushingstat[:,year],winpercent[:,year])
+    corr_coef(rushingstat[:,year],winpercent[:,year])
+    CorrCoef[year,1]=CorrCoef1[0]
+    ranges[year,1]=ranges1[year]
 
-    for i in range(len(CovPassWin)):
-        for j in range(len(CovPassWin.T)):
-            CorrPassWin[i,j]=CovPassWin.T[i,j]/math.sqrt((CovPassWin.T[i,i]*CovPassWin.T[j,j]))
-
-    CorrCoef[year,0]=CorrPassWin[0,1]
-
-    for i in range(len(CovRushWin)):
-        for j in range(len(CovRushWin.T)):
-            CorrRushWin[i,j]=CovRushWin.T[i,j]/math.sqrt((CovRushWin.T[i,i]*CovRushWin.T[j,j]))
-    
-    CorrCoef[year,1]=CorrRushWin[0,1]
 
 years2=array([0.0]*len(years)).astype('int')
 for i in range(len(years)):
     years2[i]=float(years[i])
-
-
-cc = corr_coef(years2)
-print "cc: %d" % (cc)
 
 
 
@@ -348,3 +403,26 @@ ylim(-1.0,1.0)
 xlim(min(years2)-1,max(years2)+1)
 
 show()
+
+
+avePass=0
+aveRush=0
+avePassRange=0
+aveRushRange=0
+
+for i in range(len(years)):
+    avePass=avePass+CorrCoef[i,0]
+    aveRush=aveRush+CorrCoef[i,1]
+    avePassRange=avePassRange+ranges[i,0]
+    aveRushRange=aveRushRange+ranges[i,1]
+
+
+avePass=avePass/len(years)
+aveRush=aveRush/len(years)
+avePassRange=avePassRange/len(years)
+aveRushRange=aveRushRange/len(years)
+
+print 'avePass: ' + str(avePass)
+print 'aveRush: ' + str(aveRush)
+print 'avePassRange: ' + str(avePassRange)
+print 'aveRushRange: ' + str(aveRushRange)

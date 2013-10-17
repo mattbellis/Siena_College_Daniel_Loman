@@ -19,7 +19,7 @@ datafiles.append('../data/dataset4.txt')
 N1=1000
 bins=20
 #zeroes1=array([0.0]*N1)
-zeroes1=np.zeroes(N1)
+zeroes1=np.zeros(N1)
 zeroes2=array([0.0]*int((N1*.68)))
 CorrCoefarray=array([zeroes1]*5)
 SD=array([0.0]*5)

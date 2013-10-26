@@ -1,0 +1,40 @@
+import requests
+from bs4 import BeautifulSoup
+import re
+import numpy as np
+from numpy import linalg, matrix, array
+import HTMLParser
+from HTMLParser import HTMLParser
+import math
+import pylab
+from pylab import *
+import random
+
+import matplotlib.dates as mdates
+
+
+r=requests.get('https://www.profootballfocus.com/data/by_team.php?tab=by_team')
+
+data=r.content
+
+soup=BeautifulSoup(data)
+
+tables=soup.find_all('table')
+
+a = ["" for x in range(6000)]
+
+global count
+count=0
+
+class MyHTMLParser(HTMLParser):
+
+    def handle_data(self,data):
+        global count
+        print data
+        a[count]=data
+        count = count + 1
+   
+    
+parser=MyHTMLParser()
+parser.feed(str(tables))
+b=parser.handle_data(str(tables))

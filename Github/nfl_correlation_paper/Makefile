@@ -1,7 +1,7 @@
 # Makefile for latex sources.
 # attention: 
 
-PROJECT   = paper
+PROJECT   = ajp_paper
 
 TEX_FILES = $(shell ls *.tex)
 EPS_FILES = $(shell ls figures/*.*pdf >& /dev/null)
@@ -23,6 +23,6 @@ clean:
 	rm -rf $(PROJECT).aux
 	rm -rf $(PROJECT).blg
 	rm -rf $(PROJECT).bbl
-	rm -rf paperNotes.bib
+	rm -rf $(PROJECT)Notes.bib
 	rm -rf texput.log
 

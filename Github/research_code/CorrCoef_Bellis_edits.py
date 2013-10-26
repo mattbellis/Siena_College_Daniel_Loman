@@ -120,7 +120,7 @@ for count,datafile in enumerate(datafiles):
         CorrCoefsorted[i]=CorrCoefmatrix[i+(int(N1*.16))]
     
 
-    range1[count]=CorrCoefsorted[len(CorrCoefsorted)-1]-CorrCoefsorted[0]
+    range1[count]=(CorrCoefsorted[len(CorrCoefsorted)-1]-CorrCoefsorted[0])/2
    
         
     

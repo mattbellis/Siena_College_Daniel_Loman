@@ -16,7 +16,7 @@ import matplotlib.dates as mdates
 start=3
 
 var0='TEAM'
-passvar='RATE'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
+passvar='SACK'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
 rushvar='YDS'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
 defpassvar='YDS/A'   #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
 defrushvar='TD'   #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
@@ -39,7 +39,7 @@ global CorrCoef1
 
 ### PICK WHICH STAT TO ANALYZE ###
 
-stat='pass'     #pass, rush, defpass, defrush, advanced
+stat='0'     #pass, rush, defpass, defrush, advanced
 
 
 ################################################################################
@@ -425,7 +425,7 @@ for year in range(len(years)):
     #####################################################
 
 
-    r=requests.get('http://espn.go.com/nfl/qbr/_/year/'+years[year])
+    r=requests.get('http://espn.go.com/nfl/qbr/_/year/'+years[year]+'/type/team-season')
 
     data=r.content
 
@@ -441,7 +441,7 @@ for year in range(len(years)):
 
         def handle_data(self,data):
             global count
-            #print data
+            print data
             a[count]=data
             count = count + 1
        
@@ -458,12 +458,12 @@ for year in range(len(years)):
     dataarray=array(dataarray)
 
 
-    ncols=11
-    nrows=36
+    ncols=10
+    nrows=32
 
     nvalues=len(dataarray)-ncols
     for i in range(ncols):
-        if(dataarray[i]=='PLAYER'):
+        if(dataarray[i]=='TEAM'):
             index0=i
         if(dataarray[i]==advancedvar):
             index1=i
@@ -485,7 +485,7 @@ for year in range(len(years)):
             if(a==datamatrix[i,0]):
                 datamatrix1[count1,:]=datamatrix[i,:]
                 count1=count1+1
-            
+    
 
     advancedstat[:,year]=datamatrix1[:,1]
     
@@ -588,6 +588,11 @@ for year in range(len(years)):
 
 fig = figure()
 
+years2=array([0.0]*len(years)).astype('int')
+for i in range(len(years)):
+    years2[i]=float(years[i])
+
+
 if(stat=='pass'):
     for year in range(len(years)):
         bootstrap(passingstat[:,year],winpercent[:,year])
@@ -595,29 +600,29 @@ if(stat=='pass'):
         CorrCoef[year,0]=CorrCoef1[0]
         ranges[year,0]=ranges1[year]
 
-        plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges[:,0])[:,0],fmt='ko')
-        xlabel('year')
-        ylabel('Correlation Coefficient')
-        title('Correlation between pass '+ passvar +' and win percent')
-        fmt_xdata = mdates.DateFormatter('%Y')
-        fig.autofmt_xdate()
-        ylim(-1.0,1.0)
-        xlim(min(years2)-1,max(years2)+1)
-        xrange(years2[0]-1, years2[len(years2)-1]+1)
+    plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges[:,0])[:,0],fmt='ko')
+    xlabel('year')
+    ylabel('Correlation Coefficient')
+    title('Correlation between pass '+ passvar +' and win percent')
+    fmt_xdata = mdates.DateFormatter('%Y')
+    fig.autofmt_xdate()
+    ylim(-1.0,1.0)
+    xlim(min(years2)-1,max(years2)+1)
+    xrange(years2[0]-1, years2[len(years2)-1]+1)
 
-        avePass=0
-        avePassRange=0
+    avePass=0
+    avePassRange=0
 
-        for i in range(len(years)):
-            avePass=avePass+CorrCoef[i,0]
-            avePassRange=avePassRange+ranges[i,0]
+    for i in range(len(years)):
+        avePass=avePass+CorrCoef[i,0]
+        avePassRange=avePassRange+ranges[i,0]
 
-        avePass=avePass/len(years)
-        avePassRange=avePassRange/len(years)
+    avePass=avePass/len(years)
+    avePassRange=avePassRange/len(years)
 
-        print 'avePass: ' + str(avePass)
-        print 'avePassRange: ' + str(avePassRange)
-        
+    print 'avePass: ' + str(avePass)
+    print 'avePassRange: ' + str(avePassRange)
+    
 
 if(stat=='rush'):
     for year in range(len(years)):
@@ -737,10 +742,6 @@ if(stat=='advanced'):
         print 'aveAdvanced: ' + str(aveAdvanced)
         print 'aveAdvandedRange: ' + str(aveAdvancedRange)
 
-
-years2=array([0.0]*len(years)).astype('int')
-for i in range(len(years)):
-    years2[i]=float(years[i])
 
 
 

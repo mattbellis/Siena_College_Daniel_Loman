@@ -16,7 +16,7 @@ import matplotlib.dates as mdates
 start=3
 
 var0='TEAM'
-passvar='SACK'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
+passvar='YDS'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
 rushvar='YDS'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
 defpassvar='YDS/A'   #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
 defrushvar='TD'   #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
@@ -39,7 +39,7 @@ global CorrCoef1
 
 ### PICK WHICH STAT TO ANALYZE ###
 
-stat='0'     #pass, rush, defpass, defrush, advanced
+stat='pass'     #pass, rush, defpass, defrush, advanced
 
 
 ################################################################################

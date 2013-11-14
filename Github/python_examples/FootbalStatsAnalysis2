@@ -13,31 +13,115 @@ import random
 import matplotlib.dates as mdates
 
 
-start=3
 
 var0='TEAM'
-passvar='SACK'      #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
-rushvar='YDS'      #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
-defpassvar='YDS/A'   #COMP, PCT, YDS, YDS/A, LONG, TD, INT, SACK, YDSL, RATE, YDS/G
-defrushvar='TD'   #ATT, YDS, YDS/A, LONG, TD, YDS/G, FUM, FUML
-advancedvar='TOTAL QBR'         #PASS EPA, RUN EPA, SACK EPA, PEN EPA, TOTAL EPA, ACT PLAYS, QB PAR, QB PAA, TOTAL QBR
+passvar='Yds'      #Cmp, Att, Yds, TD, Int, NY/A, 1stD
+rushvar='Yds'      #Att, Yds, TD, Y/A, 1stD
+defpassvar='Yds'   #Cmp, Att, Yds, TD, Int, NY/A, 1stD
+defrushvar='Yds'   #Att, Yds, TD, Y/A, 1stD
 
-years=['2010']#,'2009','2008','2007', '2005'] #,'2006'] #,'2005','2004','2003','2002']      #2002-2012
+years=[0.0]*43
+j=0
+for i in range(1970,2013):
+    years[j]=str(i)
+    j=j+1
 
-passingstat=matrix([[0.0]*len(years)]*32)
-rushingstat=matrix([[0.0]*len(years)]*32)
-defpassingstat=matrix([[0.0]*len(years)]*32)
-defrushingstat=matrix([[0.0]*len(years)]*32)
-advancedstat=matrix([[0.0]*len(years)]*32)
-
-winpercent=matrix([[0.0]*len(years)]*32)
 
 N=1000
 
-CorrCoef=matrix([[0.0]*5]*len(years))
+
+datamatrix=matrix([['                       ']*2]*32)
+
+CorrCoef=matrix([[0.0]*4]*len(years))
 global CorrCoef1
 
+#####################################################
+#     ####Defining Correlation Coefficient####      #
+#####################################################
 
+def corr_coef(data1,data2):
+
+    M=len(data1)
+       
+    CorrCoef1=matrix([[0.0]*1]*N)
+  
+    normal=matrix([[0.0]*2]*len(data1))       #normalized pass/win pct data
+
+    ave=matrix([[0.0]*2]*1)             #finding the mean of each dataset
+
+    for i in range(len(normal)):
+        ave[0,0]=ave[0,0]+data1[i]
+        ave[0,1]=ave[0,1]+data2[i]
+
+    ave=ave/M
+    for i in range(M):
+        normal[i,0]=data1[i]-ave[0,0]
+        normal[i,1]=data2[i]-ave[0,1]
+
+    Cov=normal.T*normal                          #Covariance matrix of 2 data sets
+
+ 
+    Corr=matrix([[0.0]*len(Cov)]*len(Cov.T))      #Correlation matrix of 2 data sets
+
+
+    for i in range(len(Cov)):
+        for j in range(len(Cov.T)):
+            Corr[i,j]=Cov.T[i,j]/math.sqrt((Cov.T[i,i]*Cov.T[j,j]))
+
+    global CorrCoef1
+    CorrCoef1[0]=Corr[0,1]
+
+
+
+################################################################################
+# Bootstrap method function
+################################################################################
+
+ranges=matrix([[0.0]*4]*len(years))
+ranges1=matrix([[0.0]*1]*len(years))
+zeroes=np.zeros(N)
+CorrCoefarray=array([zeroes]*len(years))
+
+def bootstrap(data1,data2):
+
+    M=len(data1)
+    data=matrix([[0.0]*2]*M)
+    data[:,0]=data1
+    data[:,1]=data2
+
+    ############################################################################
+    # Create N1 fake data samples for the bootstrapping.
+    ############################################################################
+    zeroes=matrix([[0.0]*2]*M)
+    newmatrix=matrix([[0.0]*2]*M)
+    CorrCoefmatrix=matrix([[0.0]*1]*N)
+    CorrCoefsorted=matrix([[0.0]*1]*int((N*.68)))
+    matrixarray=array([zeroes]*N)
+    for i in range(N):
+        for j in range(M):
+            a=random.randrange(0,M)
+            newmatrix[j,0]=data[a,0]
+            newmatrix[j,1]=data[a,1]
+
+        matrixarray[i]=newmatrix
+        
+    global CorrCoef1
+
+    ############################################################################
+    # Calculate the corr coeff for *each* boostrap sample.
+    ############################################################################
+    for i in range(N):
+
+        corr_coef(matrixarray[i,:,0].T,matrixarray[i,:,1].T)
+        CorrCoefmatrix[i]=CorrCoef1[0]
+
+    
+    CorrCoefmatrix=sorted(CorrCoefmatrix)
+    
+    for i in range(len(CorrCoefsorted)):
+        CorrCoefsorted[i]=CorrCoefmatrix[i+(int(N*.16))]
+    
+    ranges1[year,0]=(CorrCoefsorted[len(CorrCoefsorted)-1]-CorrCoefsorted[0])/2
 
 
 ################################################################################
@@ -47,326 +131,310 @@ fig_passscatter = figure(figsize=(8,8))
 
 for year in range(len(years)):
 
+    r1=requests.get('http://www.pro-football-reference.com/years/'+years[year])
+    r2=requests.get('http://www.pro-football-reference.com/years/'+years[year]+'/opp.htm')
+
+    data1=r1.content
+    soup1=BeautifulSoup(data1)
+    table1=soup1.find_all('table')
+
+    data2=r2.content
+    soup2=BeautifulSoup(data2)
+    table2=soup2.find_all('table')
+
+    if(float(years[year])<=2002):
+        tab=5
+    if(float(years[year])==2011):
+        tab=6
+    if(float(years[year])>2002 and float(years[year])<=2010 and float(years[year])!=2006):
+        tab=8
+    if(float(years[year])==2006 or float(years[year])==2012):
+        tab=9
+
+    wintable=table1[0]
+    offtable=table1[tab]
+    deftable=table2[0]
+
+
+    winrows=wintable.findAll('tr')
+    offrows=offtable.findAll('tr')
+    defrows=deftable.findAll('tr')
+
     #####################################################
     #               ####WIN PERCENTAGE####              #
     #####################################################
     
-    r=requests.get('http://www.pro-football-reference.com/years/'+years[year])
 
-    data=r.content
+    values=['Tm', 'W', 'L', 'T','W-L%', 'Pts', 'PtsO','PtDef','MoV','SoS','SRS','OSRS','DSRS']
 
-    soup=BeautifulSoup(data)
+    val1='Tm'
+    val2='W-L%'
 
-    tables=soup.find_all('table')
+    val_index1=values.index(val1)
+    val_index2=values.index(val2)
 
-    a = ["" for x in range(6000)]
-
-    global count
     count=0
 
-    class MyHTMLParser(HTMLParser):
+    for row in winrows:
+        columns=row.findAll('td')
+        for i, column1 in enumerate(columns):
+            for j, column2 in enumerate(columns):
+                if i==val_index1 and j== val_index2 and column1.text != val1 and column2.text != val2:
+                    if(column1.text != '' and column2.text != ''):
+                         datamatrix[count,0] = column1.text
+                         datamatrix[count,1] = column2.text
+                         count=count+1
+                         
+    datamatrix1=matrix([["                     "]*2]*count)
 
-        def handle_data(self,data):
-            global count
-            #print data
-            a[count]=data
-            count = count + 1
-       
-        
-    parser=MyHTMLParser()
-    parser.feed(str(tables[0]))
-    b=parser.handle_data(str(tables[0]))
-
-
-
-    
-    dataarray=["" for x in range(1096)]
-    for i in range(1096):
-        dataarray[i]=a[i]
-
- 
     count1=0
-    for i in range(len(dataarray)-1):
-        if (dataarray[count1]=='\n'):
-            del(dataarray[count1])
-        
-        else:
-            count1=count1+1
-
-    dataarray=array(dataarray)
-
-    dataarray = dataarray[dataarray!=' AFC East']
-    dataarray = dataarray[dataarray!=' AFC North']        
-    dataarray = dataarray[dataarray!=' AFC South']
-    dataarray = dataarray[dataarray!=' AFC West']
-    dataarray = dataarray[dataarray!=' NFC East']
-    dataarray = dataarray[dataarray!=' NFC North']
-    dataarray = dataarray[dataarray!=' NFC South']
-    dataarray = dataarray[dataarray!=' NFC West']
-
-    ncols=13
-    nrows=32
-
-    nvalues=len(dataarray)-ncols
-    for i in range(ncols):
-        if(dataarray[i]=='Tm'):
-            index0=i
-        if(dataarray[i]=='W-L%'):
-            index1=i
-
-    indexes=np.arange(0,nvalues,ncols)
-    datamatrix=matrix([["      "]*2]*(nrows))
-    datamatrix1=matrix([["      "]*2]*(nrows))
-
-    c=np.delete(dataarray[indexes+index0],0,None)
-    d=np.delete(dataarray[indexes+index1],0,None)
-
-    for i in range(len(c)):
-        if(i<16):
-            datamatrix[i,0]=c[i]
-            datamatrix[i,1]=float(d[i])
-        if(i>16):
-            datamatrix[i-1,0]=c[i]
-            datamatrix[i-1,1]=float(d[i])
-
-    count2=0
     for a in sorted(datamatrix[:,0]):
-        for i in range(32):
+        for i in range(len(datamatrix1)):
             if(a==datamatrix[i,0]):
-                datamatrix1[count2,:]=datamatrix[i,:]
-                if(count2<31):
-                    count2=count2+1
-            
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+
+    winpercent=matrix([[0.0]*len(years)]*len(datamatrix1))
+
     for i in range(len(datamatrix1)):
         winpercent[i,year]=float(datamatrix1[i,1])
-        
 
 
     #####################################################
     #         ####PASSING/RUSHING YARDS####             #
     #####################################################
 
+    values1=['Rk','Tm','G','Pts','Yds','Ply','Y/P','TO','FL','1stPy','1stD','Cmp','Att','Yds','TD','Int','NY/A','1stD','Att','Yds','TD','Y/A','1stD','Sc%','TO%','EXP']
+    values2=['Rk','Tm','G','Pts','Yds','Ply','Y/P','1stD','Cmp','Att','Yds','TD','Int','NY/A','1stD','Att','Yds','TD','Y/A','1stD','Sc%','TO%','EXP']
 
-    a = ["" for x in range(6000)]
+    b=float(years[year])
+    
+    if(b>2000):
+        values=values1
+    if(b<=2000.0):
+        values=values2
 
-    global count
+
+    val1='Tm'
+    val2=passvar
+    val3=rushvar
+
+    val_index1=values.index(val1)
+    val_index2=0
+    val_index3=0
+
+    for i in range(5,len(values)):
+        if(val_index2==0):
+            if(values[i]==val2):
+                val_index2=i
+        if(values[i]==val2 and val_index2 != i):
+            val_index3=i
+
     count=0
 
+    for row in offrows:
+        columns=row.findAll('td')
+        for i, column1 in enumerate(columns):
+            for j, column2 in enumerate(columns):
+                if i==val_index1 and j== val_index2 and column1.text != val1 and column2.text != val2:
+                    if(column1.text != '' and column2.text != '' and column1.text != 'Avg Team' and column1.text != 'League Total' and column1.text != 'Avg Tm/G'):
+                         datamatrix[count,0] = column1.text
+                         datamatrix[count,1] = column2.text
+                         count=count+1
 
-    class MyHTMLParser(HTMLParser):
+                         
+    datamatrix1=matrix([["                    "]*2]*count)
 
-        def handle_data(self,data):
-            global count
-            #print data
-            a[count]=data
-            count = count + 1
-       
-        
-    parser=MyHTMLParser()
-    parser.feed(str(tables[8]))
-    b=parser.handle_data(str(tables[8]))
-
-
-
-
-    dataarray=["" for x in range(1800)]
-    for i in range(1800):
-        dataarray[i]=a[i]
-
- 
     count1=0
-    for i in range(len(dataarray)-1):
-        if (dataarray[count1]=='\n'):
-            del(dataarray[count1])
-        else:
-            count1=count1+1
-
-
-    for i in range(4):
-        del(dataarray[0])
-
-    dataarray=array(dataarray)
-
-    ncols=26
-    nrows=32
-
-    nvalues=len(dataarray)-ncols
-
-    index0=1
-    index1=13
-    index2=19
-
-    indexes=np.arange(0,nvalues,ncols)
-    datamatrix=matrix([["            "]*2]*(nrows))
-    datamatrix1=matrix([["            "]*2]*(nrows))
-
-    c=np.delete(dataarray[indexes+index0],0,None)
-    d=np.delete(dataarray[indexes+index1],0,None)
-
-    for i in range(len(c)):
-        datamatrix[i,0]=c[i]
-        datamatrix[i,1]=float(d[i])
-        
-
-    count2=0
     for a in sorted(datamatrix[:,0]):
-        for i in range(32):
+        for i in range(len(datamatrix1)):
             if(a==datamatrix[i,0]):
-                datamatrix1[count2,:]=datamatrix[i,:]
-                if(count2<31):
-                    count2=count2+1
-            
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+
+    passingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+
     for i in range(len(datamatrix1)):
-        passingstat[i,year]=float(datamatrix1[i,1])
+        passingstat[i]=float(datamatrix1[i,1])
+
+    count=0
+    datamatrix=matrix([['                  ']*2]*32)
+    
+    for row in offrows:
+        columns=row.findAll('td')
+        for i, column1 in enumerate(columns):
+            for j, column2 in enumerate(columns):
+                if i==val_index1 and j== val_index3 and column1.text != val1 and column2.text != val3:
+                    if(column1.text != '' and column2.text != '' and column1.text != 'Avg Team' and column1.text != 'League Total' and column1.text != 'Avg Tm/G'):
+                         datamatrix[count,0] = column1.text
+                         datamatrix[count,1] = column2.text
+                         count=count+1
+                         
 
 
+    datamatrix1=matrix([["                  "]*2]*count)
 
-    indexes=np.arange(0,nvalues,ncols)
-    datamatrix=matrix([["      "]*2]*(nrows))
-    datamatrix1=matrix([["      "]*2]*(nrows))
-
-    c=np.delete(dataarray[indexes+index0],0,None)
-    d=np.delete(dataarray[indexes+index2],0,None)
-
-    for i in range(len(c)):
-        datamatrix[i,0]=c[i]
-        datamatrix[i,1]=float(d[i])
-
-
-    count2=0
+    count1=0
     for a in sorted(datamatrix[:,0]):
-        for i in range(32):
+        for i in range(len(datamatrix1)):
             if(a==datamatrix[i,0]):
-                datamatrix1[count2,:]=datamatrix[i,:]
-                if(count2<31):
-                    count2=count2+1
-            
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+
+    rushingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+
     for i in range(len(datamatrix1)):
-        rushingstat[i,year]=float(datamatrix1[i,1])    
-
-
+        rushingstat[i,year]=float(datamatrix1[i,1])
 
 
     #####################################################
     #                  ####DEFENSE####                  #
     #####################################################
 
-    
+     
+    val1='Tm'
+    val2=defpassvar
+    val3=defrushvar
 
+    val_index1=values.index(val1)
+    val_index2=0
+    val_index3=0
 
-    r=requests.get('http://www.pro-football-reference.com/years/'+years[year]+'/opp.htm')
+    for i in range(5,len(values)):
+        if(val_index2==0):
+            if(values[i]==val2):
+                val_index2=i
+        if(values[i]==val2 and val_index2 != i):
+            val_index3=i
 
-    data=r.content
-
-    soup=BeautifulSoup(data)
-
-    tables=soup.find_all('table')
-
-    a = ["" for x in range(6000)]
-
-    global count
     count=0
 
+    for row in defrows:
+        columns=row.findAll('td')
+        for i, column1 in enumerate(columns):
+            for j, column2 in enumerate(columns):
+                if i==val_index1 and j== val_index2 and column1.text != val1 and column2.text != val2:
+                    if(column1.text != '' and column2.text != '' and column1.text != 'Avg Team' and column1.text != 'League Total' and column1.text != 'Avg Tm/G'):
+                         datamatrix[count,0] = column1.text
+                         datamatrix[count,1] = column2.text
+                         count=count+1
 
-    a = ["" for x in range(6000)]
+                         
+    datamatrix1=matrix([["                  "]*2]*count)
 
-    global count
-    count=0
-
-
-    class MyHTMLParser(HTMLParser):
-
-        def handle_data(self,data):
-            global count
-            #print data
-            a[count]=data
-            count = count + 1
-       
-        
-    parser=MyHTMLParser()
-    parser.feed(str(tables[0]))
-    b=parser.handle_data(str(tables[0]))
-
-
-
-
-    dataarray=["" for x in range(1800)]
-    for i in range(1800):
-        dataarray[i]=a[i]
-
- 
     count1=0
-    for i in range(len(dataarray)-1):
-        if (dataarray[count1]=='\n'):
-            del(dataarray[count1])
-        else:
-            count1=count1+1
-
-
-    for i in range(4):
-        del(dataarray[0])
-
-    dataarray=array(dataarray)
-
-    dataarray = dataarray[dataarray!='Sc%']
-    dataarray = dataarray[dataarray!='TO%']
-
-    ncols=24
-    nrows=32
-
-    nvalues=len(dataarray)-ncols
-
-    index0=1
-    index1=13
-    index2=19
-
-    indexes=np.arange(0,nvalues,ncols)
-    datamatrix=matrix([["            "]*2]*(nrows))
-    datamatrix1=matrix([["            "]*2]*(nrows))
-
-    c=np.delete(dataarray[indexes+index0],0,None)
-    d=np.delete(dataarray[indexes+index1],0,None)
-
-    for i in range(32):
-        datamatrix[i,0]=c[i]
-        datamatrix[i,1]=float(d[i])
-        
-
-    count2=0
     for a in sorted(datamatrix[:,0]):
-        for i in range(32):
+        for i in range(len(datamatrix1)):
             if(a==datamatrix[i,0]):
-                datamatrix1[count2,:]=datamatrix[i,:]
-                if(count2<31):
-                    count2=count2+1
-            
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+
+    defpassingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+
     for i in range(len(datamatrix1)):
         defpassingstat[i,year]=float(datamatrix1[i,1])
 
+    count=0
+    datamatrix=matrix([['                  ']*2]*32)
+    
+    for row in offrows:
+        columns=row.findAll('td')
+        for i, column1 in enumerate(columns):
+            for j, column2 in enumerate(columns):
+                if i==val_index1 and j== val_index3 and column1.text != val1 and column2.text != val3:
+                    if(column1.text != '' and column2.text != '' and column1.text != 'Avg Team' and column1.text != 'League Total' and column1.text != 'Avg Tm/G'):
+                         datamatrix[count,0] = column1.text
+                         datamatrix[count,1] = column2.text
+                         count=count+1
 
 
-    indexes=np.arange(0,nvalues,ncols)
-    datamatrix=matrix([["      "]*2]*(nrows))
-    datamatrix1=matrix([["      "]*2]*(nrows))
+    datamatrix1=matrix([["                  "]*2]*count)
 
-    c=np.delete(dataarray[indexes+index0],0,None)
-    d=np.delete(dataarray[indexes+index2],0,None)
-
-    for i in range(32):
-        datamatrix[i,0]=c[i]
-        datamatrix[i,1]=float(d[i])
-
-
-    count2=0
+    count1=0
     for a in sorted(datamatrix[:,0]):
-        for i in range(32):
+        for i in range(len(datamatrix1)):
             if(a==datamatrix[i,0]):
-                datamatrix1[count2,:]=datamatrix[i,:]
-                if(count2<31):
-                    count2=count2+1
-            
+                datamatrix1[count1,:]=datamatrix[i,:]
+                count1=count1+1
+
+    defrushingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+
     for i in range(len(datamatrix1)):
         defrushingstat[i,year]=float(datamatrix1[i,1])
 
 
+
+    bootstrap(passingstat[:,year],winpercent[:,year])
+    corr_coef(passingstat[:,year],winpercent[:,year])
+    CorrCoef[year,0]=CorrCoef1[0]
+    ranges[year,0]=ranges1[year]
+    
+
+    bootstrap(rushingstat[:,year],winpercent[:,year])
+    corr_coef(rushingstat[:,year],winpercent[:,year])
+    CorrCoef[year,1]=CorrCoef1[0]
+    ranges[year,1]=ranges1[year]
+    
+
+    bootstrap(defpassingstat[:,year],winpercent[:,year])
+    corr_coef(defpassingstat[:,year],winpercent[:,year])
+    CorrCoef[year,2]=CorrCoef1[0]
+    ranges[year,2]=ranges1[year]
+
+
+    bootstrap(defrushingstat[:,year],winpercent[:,year])
+    corr_coef(defrushingstat[:,year],winpercent[:,year])
+    CorrCoef[year,3]=CorrCoef1[0]
+    ranges[year,3]=ranges1[year]
         
+years2=array([0.0]*len(years)).astype('int')
+for i in range(len(years)):
+    years2[i]=float(years[i])       
+
+fig=figure()
+
+plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges[:,0])[:,0],fmt='ko-')
+xlabel('year')
+ylabel('Correlation Coefficient')
+title('Correlation between pass '+ passvar +' and win percent')
+fmt_xdata = mdates.DateFormatter('%Y')
+fig.autofmt_xdate()
+ylim(-1.0,1.0)
+xlim(min(years2)-1,max(years2)+1)
+xrange(years2[0]-1, years2[len(years2)-1]+1)
+
+figure()
+
+
+plt.errorbar(years2, array(CorrCoef[:,1])[:,0], yerr=array(ranges[:,1])[:,0],fmt='ko-')
+xlabel('year')
+ylabel('Correlation Coefficient')
+title('Correlation between rush '+ rushvar + ' and win percent')
+ylim(-1.0,1.0)
+xlim(min(years2)-1,max(years2)+1)
+xrange(years2[0]-1, years2[len(years2)-1]+1)
+
+figure()
+
+
+plt.errorbar(years2, array(CorrCoef[:,2])[:,0], yerr=array(ranges[:,2])[:,0],fmt='ko-')
+xlabel('year')
+ylabel('Correlation Coefficient')
+title('Correlation between def pass '+ defpassvar + ' and win percent')
+ylim(-1.0,1.0)
+xlim(min(years2)-1,max(years2)+1)
+xrange(years2[0]-1, years2[len(years2)-1]+1)
+
+figure()
+
+
+plt.errorbar(years2, array(CorrCoef[:,3])[:,0], yerr=array(ranges[:,3])[:,0],fmt='ko-')
+xlabel('year')
+ylabel('Correlation Coefficient')
+title('Correlation between def rush '+ defrushvar + ' and win percent')
+ylim(-1.0,1.0)
+xlim(min(years2)-1,max(years2)+1)
+xrange(years2[0]-1, years2[len(years2)-1]+1)
+
+
+show()

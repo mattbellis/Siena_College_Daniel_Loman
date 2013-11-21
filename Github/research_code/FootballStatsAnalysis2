@@ -20,20 +20,24 @@ rushvar='Yds'      #Att, Yds, TD, Y/A, 1stD
 defpassvar='Yds'   #Cmp, Att, Yds, TD, Int, NY/A, 1stD
 defrushvar='Yds'   #Att, Yds, TD, Y/A, 1stD
 
-years=[0.0]*43
+
+years=[0.0]*43  #enters desired number of years to analyze
 j=0
 for i in range(1970,2013):
     years[j]=str(i)
     j=j+1
 
-
-N=1000
-
+#years=['2012']
 
 datamatrix=matrix([['                       ']*2]*32)
 
 CorrCoef=matrix([[0.0]*4]*len(years))
 global CorrCoef1
+
+avepassyards=matrix([[0.0]*1]*len(years))
+averushyards=matrix([[0.0]*1]*len(years))
+avedefpassyards=matrix([[0.0]*1]*len(years))
+avedefrushyards=matrix([[0.0]*1]*len(years))
 
 #####################################################
 #     ####Defining Correlation Coefficient####      #
@@ -77,8 +81,12 @@ def corr_coef(data1,data2):
 # Bootstrap method function
 ################################################################################
 
-ranges=matrix([[0.0]*4]*len(years))
+N=1000 #Number of iterations for bootstrap method
+
+ranges69=matrix([[0.0]*4]*len(years))
+ranges95=matrix([[0.0]*4]*len(years))
 ranges1=matrix([[0.0]*1]*len(years))
+ranges2=matrix([[0.0]*1]*len(years))
 zeroes=np.zeros(N)
 CorrCoefarray=array([zeroes]*len(years))
 
@@ -95,7 +103,8 @@ def bootstrap(data1,data2):
     zeroes=matrix([[0.0]*2]*M)
     newmatrix=matrix([[0.0]*2]*M)
     CorrCoefmatrix=matrix([[0.0]*1]*N)
-    CorrCoefsorted=matrix([[0.0]*1]*int((N*.68)))
+    CorrCoefsorted1=matrix([[0.0]*1]*int((N*.68)))
+    CorrCoefsorted2=matrix([[0.0]*1]*int((N*.95)))
     matrixarray=array([zeroes]*N)
     for i in range(N):
         for j in range(M):
@@ -118,10 +127,15 @@ def bootstrap(data1,data2):
     
     CorrCoefmatrix=sorted(CorrCoefmatrix)
     
-    for i in range(len(CorrCoefsorted)):
-        CorrCoefsorted[i]=CorrCoefmatrix[i+(int(N*.16))]
+    for i in range(len(CorrCoefsorted1)):
+        CorrCoefsorted1[i]=CorrCoefmatrix[i+(int(N*.16))]
+
+    for i in range(len(CorrCoefsorted2)):
+        CorrCoefsorted2[i]=CorrCoefmatrix[i+(int(N*.025))]
     
-    ranges1[year,0]=(CorrCoefsorted[len(CorrCoefsorted)-1]-CorrCoefsorted[0])/2
+    ranges1[year,0]=(CorrCoefsorted1[len(CorrCoefsorted1)-1]-CorrCoefsorted1[0])/2
+    ranges2[year,0]=(CorrCoefsorted2[len(CorrCoefsorted2)-1]-CorrCoefsorted2[0])/2
+
 
 
 ################################################################################
@@ -252,7 +266,7 @@ for year in range(len(years)):
                 datamatrix1[count1,:]=datamatrix[i,:]
                 count1=count1+1
 
-    passingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+    passingstat=matrix([[0.0]*1]*len(datamatrix1))
 
     for i in range(len(datamatrix1)):
         passingstat[i]=float(datamatrix1[i,1])
@@ -281,10 +295,10 @@ for year in range(len(years)):
                 datamatrix1[count1,:]=datamatrix[i,:]
                 count1=count1+1
 
-    rushingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+    rushingstat=matrix([[0.0]*1]*len(datamatrix1))
 
     for i in range(len(datamatrix1)):
-        rushingstat[i,year]=float(datamatrix1[i,1])
+        rushingstat[i]=float(datamatrix1[i,1])
 
 
     #####################################################
@@ -329,15 +343,15 @@ for year in range(len(years)):
                 datamatrix1[count1,:]=datamatrix[i,:]
                 count1=count1+1
 
-    defpassingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+    defpassingstat=matrix([[0.0]*1]*len(datamatrix1))
 
     for i in range(len(datamatrix1)):
-        defpassingstat[i,year]=float(datamatrix1[i,1])
+        defpassingstat[i]=float(datamatrix1[i,1])
 
     count=0
     datamatrix=matrix([['                  ']*2]*32)
     
-    for row in offrows:
+    for row in defrows:
         columns=row.findAll('td')
         for i, column1 in enumerate(columns):
             for j, column2 in enumerate(columns):
@@ -357,46 +371,79 @@ for year in range(len(years)):
                 datamatrix1[count1,:]=datamatrix[i,:]
                 count1=count1+1
 
-    defrushingstat=matrix([[0.0]*len(years)]*len(datamatrix1))
+    defrushingstat=matrix([[0.0]*1]*len(datamatrix1))
 
     for i in range(len(datamatrix1)):
-        defrushingstat[i,year]=float(datamatrix1[i,1])
+        defrushingstat[i]=float(datamatrix1[i,1])
 
 
+    ### FINDS CORRELATION AND UNCERTAINTIES FOR THE STATS ###
 
-    bootstrap(passingstat[:,year],winpercent[:,year])
-    corr_coef(passingstat[:,year],winpercent[:,year])
+    print 'Extracting passing data for ' + years[year] + '...'
+    bootstrap(passingstat[:],winpercent[:,year])
+    corr_coef(passingstat[:],winpercent[:,year])
     CorrCoef[year,0]=CorrCoef1[0]
-    ranges[year,0]=ranges1[year]
+    ranges69[year,0]=ranges1[year]
+    ranges95[year,0]=ranges2[year]
     
 
-    bootstrap(rushingstat[:,year],winpercent[:,year])
-    corr_coef(rushingstat[:,year],winpercent[:,year])
+    print 'Extracting rushing data for ' + years[year] + '...'
+    bootstrap(rushingstat[:],winpercent[:,year])
+    corr_coef(rushingstat[:],winpercent[:,year])
     CorrCoef[year,1]=CorrCoef1[0]
-    ranges[year,1]=ranges1[year]
+    ranges69[year,1]=ranges1[year]
+    ranges95[year,1]=ranges2[year]
     
 
-    bootstrap(defpassingstat[:,year],winpercent[:,year])
-    corr_coef(defpassingstat[:,year],winpercent[:,year])
+    print 'Extracting defensive passing data for ' + years[year] + '...'
+    bootstrap(defpassingstat[:],winpercent[:,year])
+    corr_coef(defpassingstat[:],winpercent[:,year])
     CorrCoef[year,2]=CorrCoef1[0]
-    ranges[year,2]=ranges1[year]
+    ranges69[year,2]=ranges1[year]
+    ranges95[year,2]=ranges2[year]
 
 
-    bootstrap(defrushingstat[:,year],winpercent[:,year])
-    corr_coef(defrushingstat[:,year],winpercent[:,year])
+    print 'Extracting defensive rushing data for ' + years[year] + '...'
+    bootstrap(defrushingstat[:],winpercent[:,year])
+    corr_coef(defrushingstat[:],winpercent[:,year])
     CorrCoef[year,3]=CorrCoef1[0]
-    ranges[year,3]=ranges1[year]
+    ranges69[year,3]=ranges1[year]
+    ranges95[year,3]=ranges2[year]
+
+
+    ### FINDS AVERAGE VALUES FOR THE STATISTICS ###
+
+    avepass=0
+    averush=0
+    avedefpass=0
+    avedefrush=0
+    for i in range(len(passingstat)):
+        avepass=avepass+passingstat[i]
+        averush=averush+rushingstat[i]
+        avedefpass=avedefpass+defpassingstat[i]
+        avedefrush=avedefrush+defrushingstat[i]
+
+    avepassyards[year]=avepass/len(passingstat)
+    averushyards[year]=averush/len(rushingstat)
+    avedefpassyards[year]=avedefpass/len(defpassingstat)
+    avedefrushyards[year]=avedefrush/len(defrushingstat)
         
+    
+
+    ### PLOTS CORRELATION COEFFICIENTS AND THEIR UNCERTAINTIES ###
+
 years2=array([0.0]*len(years)).astype('int')
 for i in range(len(years)):
     years2[i]=float(years[i])       
 
 fig=figure()
 
-plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges[:,0])[:,0],fmt='ko-')
-xlabel('year')
-ylabel('Correlation Coefficient')
-title('Correlation between pass '+ passvar +' and win percent')
+plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges95[:,0])[:,0],fmt='ro',label='95% confidence')
+plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges69[:,0])[:,0],fmt='ko',label='69% confidence')
+legend(bbox_to_anchor=(0.50,.15),loc=6,borderaxespad=0,fontsize=16)
+xlabel('year',fontsize=20)
+ylabel('Correlation Coefficient',fontsize=20)
+title('Correlation between pass '+ passvar +' and win percent',fontsize=20)
 fmt_xdata = mdates.DateFormatter('%Y')
 fig.autofmt_xdate()
 ylim(-1.0,1.0)
@@ -405,33 +452,36 @@ xrange(years2[0]-1, years2[len(years2)-1]+1)
 
 figure()
 
-
-plt.errorbar(years2, array(CorrCoef[:,1])[:,0], yerr=array(ranges[:,1])[:,0],fmt='ko-')
-xlabel('year')
-ylabel('Correlation Coefficient')
-title('Correlation between rush '+ rushvar + ' and win percent')
+plt.errorbar(years2, array(CorrCoef[:,1])[:,0], yerr=array(ranges95[:,1])[:,0],fmt='ro',label='95% confidence')
+plt.errorbar(years2, array(CorrCoef[:,1])[:,0], yerr=array(ranges69[:,1])[:,0],fmt='ko',label='69% confidence')
+legend(bbox_to_anchor=(0.50,.15),loc=6,borderaxespad=0,fontsize=16)
+xlabel('year',fontsize=20)
+ylabel('Correlation Coefficient',fontsize=20)
+title('Correlation between rush '+ rushvar + ' and win percent',fontsize=20)
 ylim(-1.0,1.0)
 xlim(min(years2)-1,max(years2)+1)
 xrange(years2[0]-1, years2[len(years2)-1]+1)
 
 figure()
 
-
-plt.errorbar(years2, array(CorrCoef[:,2])[:,0], yerr=array(ranges[:,2])[:,0],fmt='ko-')
-xlabel('year')
-ylabel('Correlation Coefficient')
-title('Correlation between def pass '+ defpassvar + ' and win percent')
+plt.errorbar(years2, array(CorrCoef[:,2])[:,0], yerr=array(ranges95[:,2])[:,0],fmt='ro',label='95% confidence')
+plt.errorbar(years2, array(CorrCoef[:,2])[:,0], yerr=array(ranges69[:,2])[:,0],fmt='ko',label='69% confidence')
+legend(bbox_to_anchor=(0.50,.90),loc=6,borderaxespad=0,fontsize=16)
+xlabel('year', fontsize=20)
+ylabel('Correlation Coefficient',fontsize=20)
+title('Correlation between def pass '+ defpassvar + ' and win percent', fontsize=20)
 ylim(-1.0,1.0)
 xlim(min(years2)-1,max(years2)+1)
 xrange(years2[0]-1, years2[len(years2)-1]+1)
 
 figure()
 
-
-plt.errorbar(years2, array(CorrCoef[:,3])[:,0], yerr=array(ranges[:,3])[:,0],fmt='ko-')
-xlabel('year')
-ylabel('Correlation Coefficient')
-title('Correlation between def rush '+ defrushvar + ' and win percent')
+plt.errorbar(years2, array(CorrCoef[:,3])[:,0], yerr=array(ranges95[:,3])[:,0],fmt='ro',label='95% confidence')
+plt.errorbar(years2, array(CorrCoef[:,3])[:,0], yerr=array(ranges69[:,3])[:,0],fmt='ko',label='69% confidence')
+legend(bbox_to_anchor=(0.50,.85),loc=6,borderaxespad=0,fontsize=16)
+xlabel('year',fontsize=20)
+ylabel('Correlation Coefficient',fontsize=20)
+title('Correlation between def rush '+ defrushvar + ' and win percent',fontsize=20)
 ylim(-1.0,1.0)
 xlim(min(years2)-1,max(years2)+1)
 xrange(years2[0]-1, years2[len(years2)-1]+1)

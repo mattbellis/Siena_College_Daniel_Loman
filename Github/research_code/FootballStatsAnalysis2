@@ -21,13 +21,13 @@ defpassvar='Yds'   #Cmp, Att, Yds, TD, Int, NY/A, 1stD
 defrushvar='Yds'   #Att, Yds, TD, Y/A, 1stD
 
 
-years=[0.0]*43  #enters desired number of years to analyze
+years=[0.0]*1  #enters desired number of years to analyze
 j=0
-for i in range(1970,2013):
+for i in range(2012,2013):
     years[j]=str(i)
     j=j+1
 
-#years=['2012']
+
 
 datamatrix=matrix([['                       ']*2]*32)
 
@@ -415,28 +415,48 @@ for year in range(len(years)):
 
     avepass=0
     averush=0
-    avedefpass=0
-    avedefrush=0
+
     for i in range(len(passingstat)):
         avepass=avepass+passingstat[i]
         averush=averush+rushingstat[i]
-        avedefpass=avedefpass+defpassingstat[i]
-        avedefrush=avedefrush+defrushingstat[i]
+
 
     avepassyards[year]=avepass/len(passingstat)
     averushyards[year]=averush/len(rushingstat)
-    avedefpassyards[year]=avedefpass/len(defpassingstat)
-    avedefrushyards[year]=avedefrush/len(defrushingstat)
+
+
+    if(float(years[year])<1978):
+        avepassyards[year]=avepassyards[year]/14
+        averushyards[year]=averushyards[year]/14
+    if(float(years[year])>=1978 and float(years[year])!= 1982 and float(years[year])!=1987):
+        avepassyards[year]=avepassyards[year]/16
+        averushyards[year]=averushyards[year]/16
+    if(float(years[year])==1982):
+        avepassyards[year]=avepassyards[year]/9
+        averushyards[year]=averushyards[year]/9
+    if(float(years[year])==1987):
+        avepassyards[year]=avepassyards[year]/15
+        averushyards[year]=averushyards[year]/15
+
+
+    ### SAVES AVERAGE VALUES TO A TEXT FILE ###
+
+    exportFolder='/Users/DanLo1108/Documents/Python programs/Exported Python Files/'
         
+    np.savetxt(exportFolder+'PASSYDS.txt',avepassyards, delimiter="\t")
+    np.savetxt(exportFolder+'RUSHYDS.txt',averushyards, delimiter="\t")
+
     
 
     ### PLOTS CORRELATION COEFFICIENTS AND THEIR UNCERTAINTIES ###
 
 years2=array([0.0]*len(years)).astype('int')
 for i in range(len(years)):
-    years2[i]=float(years[i])       
+    years2[i]=float(years[i])
 
-fig=figure()
+fig = figure()
+
+
 
 plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges95[:,0])[:,0],fmt='ro',label='95% confidence')
 plt.errorbar(years2, array(CorrCoef[:,0])[:,0], yerr=array(ranges69[:,0])[:,0],fmt='ko',label='69% confidence')
@@ -449,6 +469,8 @@ fig.autofmt_xdate()
 ylim(-1.0,1.0)
 xlim(min(years2)-1,max(years2)+1)
 xrange(years2[0]-1, years2[len(years2)-1]+1)
+fmt_xdata = mdates.DateFormatter('%Y')
+fig.autofmt_xdate()
 
 figure()
 

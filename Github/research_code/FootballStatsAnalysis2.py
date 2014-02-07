@@ -21,9 +21,9 @@ defpassvar='Yds'   #Cmp, Att, Yds, TD, Int, NY/A, 1stD
 defrushvar='Yds'   #Att, Yds, TD, Y/A, 1stD
 
 
-years=[0.0]*1  #enters desired number of years to analyze
+years=[0.0]*43  #enters desired number of years to analyze
 j=0
-for i in range(2012,2013):
+for i in range(1970,2013):
     years[j]=str(i)
     j=j+1
 

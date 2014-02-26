@@ -1,10 +1,10 @@
-
 import random
 import glob
 import numpy as np
 from numpy import matrix, linalg
 import matplotlib
 import pylab
+from pylab import *
 
 #############################
 ###    IMPORTING DATA     ###
@@ -93,7 +93,7 @@ FTpFGAmean=mean(FTpFGAl)
 SD=np.array([0.0]*21)
 ORarray=np.array([0.0]*21)
 
-sims=100    #Number of simulations run (100 poss = 1 simulation)
+sims=10    #Number of simulations run (100 poss = 1 simulation)
 
 OffRatings=matrix([[0.0]*21]*sims)
 
@@ -107,11 +107,11 @@ for i in range(21):
 
 
 
-    eFG=eFGmean        #Field goal percentage weighted for 3 point FGs
+    eFG=eFGmean+j*eFGsd       #Field goal percentage weighted for 3 point FGs
     FTR=FTRmean        #Free throw rate (FTA/FGA)
     TOR=TORmean        #Turnover rate (TO/poss)
     ORR=ORRmean        #Offensive rebound rate
-    FTP=FTPmean+j*FTPsd        #League average FT%
+    FTP=FTPmean        #League average FT%
 
     FGA=(1-TOR)/(1+.44*FTR)  # % of possessions that result in a field goal possession
     FTA=1-FGA-TOR            # % of possessions that result in free throws
@@ -132,6 +132,7 @@ for i in range(21):
     count=0
     n=0
     while(poss<(100*sims)):
+        import random
         a=random.random()
         if(a<FGA):
             b=random.random()
@@ -198,17 +199,30 @@ for i in range(21):
     FGP=float(FGM)/FGAtt #Field goal percentage
 
     OR=float(points)/sims   #Offensive Efficiency
-
-    import Bootstrap
-    from Bootstrap import bootstrap
+    
 
     ORarray[i]=OR
     SD[i]=j
 
-pylab.plot(SD,ORarray)
 
-pylab.xlabel('Standard Deviations')
-pylab.ylabel('Offensive Rating')
-pylab.title('Relationship between FTP and Offensive Efficiency')
+UC=np.array([0.0]*21)
 
-pylab.show()
+for i in range(21):
+    a=sorted(OffRatings[:,i])
+    UC[i]=(a[(int(.95*len(OffRatings)))]-a[(int(.05*len(OffRatings)))])/2
+
+
+slope,b=polyfit(SD,ORarray,1)
+
+figure()
+errorbar(SD,array(ORarray), yerr=array(UC), fmt='ro',label='95% confidence')
+legend(bbox_to_anchor=(0.50,.95),loc=6,borderaxespad=0,fontsize=16)
+xlabel=('z score')
+ylabel=('Offensive Efficiency (Pts/100 poss)')
+title=('Effect of changing eFG% on OE')
+ylim(70,130)
+
+
+show()
+
+print slope

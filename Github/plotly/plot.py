@@ -57,6 +57,8 @@ def colorscale(scl, r):
     c = []
     SCL_FI = len(scl)-1 # final index of color scale 
 
+    r *= 100
+
     r -= min(r)
     rmax = max(r)
     for i in r:
@@ -106,12 +108,12 @@ def main():
         #t = "%s" % (i0)
         print t
         d = {'x':i2, 'y':i3,\
-            'marker': {'size':40*(i4-min(v2))/(max(v2)-min(v2)), 'opacity':0.9, 'line':{'width':1},'color':c},\
+            'marker': {'size':20*(i4-min(v2))/(max(v2)-min(v2)), 'opacity':0.9, 'line':{'width':1},'color':c},\
             'type':'scatter','mode':'markers',\
             'text':t}
         data.append(d)
 
-    citation = {'showarrow':False, 'font':{'size':10},'xref':'paper','yref':'paper','x':-0.18,'y':-0.18,'align':'left',\
+    citation = {'showarrow':False, 'font':{'size':10},'xref':'paper','yref':'paper','x':0.00,'y':-0.18,'align':'left',\
                 'text':'Data source and inspiration:<br>WHERE DID THIS COME FROM?'}
 
 

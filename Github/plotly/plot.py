@@ -9,10 +9,18 @@ import datetime
 
 import plotly
 
+# Got the color scale from here
+# http://nbviewer.ipython.org/gist/jackparmer/7729584
 # RGB color scale from colorbrewer.com
 GnBu = [(247, 252, 240),(224, 243, 219),(204, 235, 197),\
     (168, 221, 181),(123, 204, 196),(78, 179, 211),\
     (43, 140, 190),(8, 104, 172),(8, 64, 129)]
+
+YlGnBu = [(255,255,217), (237,248,177), (199,233,180),\
+            (127,205,187), (65,182,196), (29,145,192),\
+                (34,94,168), (37,52,148), (8,29,88)]
+
+diverging = [(252,141,89),(255,255,191),(145,191,219)]
 
 def rgbToHsl(rgb):
     ''' Adapted from M Bostock's RGB to HSL converter in d3.js
@@ -49,6 +57,7 @@ def colorscale(scl, r):
     c = []
     SCL_FI = len(scl)-1 # final index of color scale 
 
+    r -= min(r)
     rmax = max(r)
     for i in r:
         c_i = int(i*math.floor(SCL_FI)/round(rmax)) # start color index
@@ -87,7 +96,8 @@ def main():
     #axesstyle = {}
     #l={'title': plotly_title,'xaxis':axesstyle}
 
-    colors = colorscale(GnBu, v4)
+    #colors = colorscale(GnBu, v4)
+    colors = colorscale(diverging, v4)
 
     data = []
     for i0,i1,i2,i3,i4,i5,i6,c in zip(teams,year,v0,v1,v2,v3,v4,colors):
@@ -96,7 +106,7 @@ def main():
         #t = "%s" % (i0)
         print t
         d = {'x':i2, 'y':i3,\
-            'marker': {'size':30*(i4-min(v2))/(max(v2)-min(v2)), 'opacity':0.5, 'line':{'width':1},'color':c},\
+            'marker': {'size':40*(i4-min(v2))/(max(v2)-min(v2)), 'opacity':0.9, 'line':{'width':1},'color':c},\
             'type':'scatter','mode':'markers',\
             'text':t}
         data.append(d)

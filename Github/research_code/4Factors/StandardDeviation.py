@@ -26,3 +26,10 @@ def mean(data):
 
 
     return sumX/N
+
+
+def z_score(datapoint, mean, SD):
+    
+    z_score=(datapoint-mean)/SD
+
+    return z_score

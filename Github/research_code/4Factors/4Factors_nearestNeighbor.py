@@ -76,9 +76,9 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 from sklearn.datasets.samples_generator import make_blobs
 
 
-percent=.15
+percent=.20
 
-good_bad="bad"
+good_bad="good"
 
 Y=matrix([[0.0]*5]*210)
 

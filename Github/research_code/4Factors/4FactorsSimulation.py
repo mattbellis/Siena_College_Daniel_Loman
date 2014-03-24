@@ -15,14 +15,14 @@ b=str(a[0])
 infile=open(b,'r')
 lines=infile.readlines()
 
-OE=matrix([[0.0]*1]*30)
-eFGl=matrix([[0.0]*1]*30)
-FTRl=matrix([[0.0]*1]*30)
-TORl=matrix([[0.0]*1]*30)
-ORRl=matrix([[0.0]*1]*30)
+OE=matrix([[0.0]*1]*210)
+eFGl=matrix([[0.0]*1]*210)
+FTR1l=matrix([[0.0]*1]*210)
+TORl=matrix([[0.0]*1]*210)
+ORRl=matrix([[0.0]*1]*210)
 
 startData=0
-endData=30
+endData=210
 
 index=0
 
@@ -33,21 +33,22 @@ for i in range(N):
         content=np.array(lines[i].split()).astype('float')
         OE[index,0]=content[0]
         eFGl[index,0]=content[1]/100
-        FTRl[index,0]=content[2]/100
+        FTR1l[index,0]=content[2]/10000
         TORl[index,0]=content[3]/100
         ORRl[index,0]=content[4]/100
         index=index+1
 
+    
 
 a=glob.glob('/Users/DanLo1108/Documents/AdvancedLab/Data Files/FTP.txt')
 b=str(a[0])
 infile=open(b,'r')
 lines=infile.readlines()
 
-FTPl=matrix([[0.0]*1]*30)
+FTPl=matrix([[0.0]*1]*210)
 
 startData=0
-endData=30
+endData=210
 
 index=0
 
@@ -59,10 +60,10 @@ for i in range(N):
         FTPl[index,0]=content[0]/100
         index=index+1
 
-FTpFGAl=matrix([[0.0]*1]*30)
+FTRl=matrix([[0.0]*1]*210)
 
-for i in range(30):
-    FTpFGAl[i]=FTRl[i]*FTPl[i]
+for i in range(210):
+    FTRl[i]=FTR1l[i]/FTPl[i]
     
 
 ################################################
@@ -72,34 +73,47 @@ for i in range(30):
 import StandardDeviation
 from StandardDeviation import StandDev
 from StandardDeviation import mean
+from StandardDeviation import z_score
 
 eFGsd=StandDev(eFGl)
 FTRsd=StandDev(FTRl)
 TORsd=StandDev(TORl)
 ORRsd=StandDev(ORRl)
 FTPsd=StandDev(FTPl)
-FTpFGAsd=StandDev(FTpFGAl)
+
 
 eFGmean=mean(eFGl)
 FTRmean=mean(FTRl)
 TORmean=mean(TORl)
 ORRmean=mean(ORRl)
 FTPmean=mean(FTPl)
-FTpFGAmean=mean(FTpFGAl)
+
+eFGz=matrix([[0.0]*1]*210)
+FTRz=matrix([[0.0]*1]*210)
+TORz=matrix([[0.0]*1]*210)
+ORRz=matrix([[0.0]*1]*210)
+FTPz=matrix([[0.0]*1]*210)
+
+for i in range(len(eFGl)):
+    eFGz[i]=z_score(eFGl[i],eFGmean,eFGsd)
+    FTRz[i]=z_score(FTRl[i],FTRmean,FTRsd)
+    TORz[i]=z_score(TORl[i],TORmean,TORsd)
+    ORRz[i]=z_score(ORRl[i],ORRmean,ORRsd)
+    FTPz[i]=z_score(FTPl[i],FTPmean,FTPsd)
+
 
 
 ### General Formula: FGA+.44*FTR+TOR=1.000
 
 SD=np.array([0.0]*21)
-ORarray=np.array([0.0]*21)
+ORarray=np.array([0.0]*210)
 
-sims=10    #Number of simulations run (100 poss = 1 simulation)
+sims=1000    #Number of simulations run (100 poss = 1 simulation)
 
-OffRatings=matrix([[0.0]*21]*sims)
+OffRatings=matrix([[0.0]*210]*sims)
 
-for i in range(21):
+for i in range(210):
 
-    j=.2*i-2
 
     ############################################################
     ###  Four Factors for an average NBA team in 2012-2013   ###
@@ -107,11 +121,11 @@ for i in range(21):
 
 
 
-    eFG=eFGmean+j*eFGsd       #Field goal percentage weighted for 3 point FGs
-    FTR=FTRmean        #Free throw rate (FTA/FGA)
-    TOR=TORmean        #Turnover rate (TO/poss)
-    ORR=ORRmean        #Offensive rebound rate
-    FTP=FTPmean        #League average FT%
+    eFG=eFGl[i]      #Field goal percentage weighted for 3 point FGs
+    FTR=FTRl[i]        #Free throw rate (FTA/FGA)
+    TOR=TORl[i]        #Turnover rate (TO/poss)
+    ORR=ORRl[i]        #Offensive rebound rate
+    FTP=FTPl[i]        #League average FT%
 
     FGA=(1-TOR)/(1+.44*FTR)  # % of possessions that result in a field goal possession
     FTA=1-FGA-TOR            # % of possessions that result in free throws
@@ -202,27 +216,54 @@ for i in range(21):
     
 
     ORarray[i]=OR
-    SD[i]=j
+
+    print i
+    
 
 
-UC=np.array([0.0]*21)
+error=matrix([[0.0]*1]*210)
 
-for i in range(21):
-    a=sorted(OffRatings[:,i])
-    UC[i]=(a[(int(.95*len(OffRatings)))]-a[(int(.05*len(OffRatings)))])/2
-
-
-slope,b=polyfit(SD,ORarray,1)
-
-figure()
-errorbar(SD,array(ORarray), yerr=array(UC), fmt='ro',label='95% confidence')
-legend(bbox_to_anchor=(0.50,.95),loc=6,borderaxespad=0,fontsize=16)
-xlabel=('z score')
-ylabel=('Offensive Efficiency (Pts/100 poss)')
-title=('Effect of changing eFG% on OE')
-ylim(70,130)
+for i in range(210):
+    error[i]=OE[i]-ORarray[i]
 
 
-show()
+import CorrelationCoefficient
+from CorrelationCoefficient import corr_coef
 
-print slope
+
+eFGcorr=corr_coef(error,eFGz)
+FTRcorr=corr_coef(error,FTRz)
+TORcorr=corr_coef(error,TORz)
+ORRcorr=corr_coef(error,ORRz)
+
+import Bootstrap
+from Bootstrap import bootstrap
+
+eFGbs=bootstrap(error,eFGz)
+FTRbs=bootstrap(error,FTRz)
+TORbs=bootstrap(error,TORz)
+ORRbs=bootstrap(error,ORRz)
+    
+#    SD[i]=j
+
+
+#UC=np.array([0.0]*21)
+
+#for i in range(21):
+#    a=sorted(OffRatings[:,i])
+#    UC[i]=(a[(int(.95*len(OffRatings)))]-a[(int(.05*len(OffRatings)))])/2
+
+
+#slope,b=polyfit(SD,ORarray,1)
+
+#figure()
+#errorbar(SD,array(ORarray), yerr=array(UC), fmt='ro',label='95% confidence')
+#legend(bbox_to_anchor=(0.50,.95),loc=6,borderaxespad=0,fontsize=16)
+#xlabel=('z score')
+#ylabel=('Offensive Efficiency (Pts/100 poss)')
+#title=('Effect of changing eFG% on OE')
+
+
+#show()
+
+#print slope

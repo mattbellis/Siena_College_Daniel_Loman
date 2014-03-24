@@ -17,7 +17,7 @@ lines=infile.readlines()
 
 OE=matrix([[0.0]*1]*210)
 eFG=matrix([[0.0]*1]*210)
-FTR1=matrix([[0.0]*1]*210)
+FTR=matrix([[0.0]*1]*210)
 TOR=matrix([[0.0]*1]*210)
 ORR=matrix([[0.0]*1]*210)
 
@@ -33,7 +33,7 @@ for i in range(N):
         content=np.array(lines[i].split()).astype('float')
         OE[index,0]=content[0]
         eFG[index,0]=content[1]/100
-        FTR1[index,0]=content[2]/100
+        FTR[index,0]=content[2]/10000
         TOR[index,0]=content[3]/100
         ORR[index,0]=content[4]/100
         index=index+1
@@ -44,25 +44,6 @@ b=str(a[0])
 infile=open(b,'r')
 lines=infile.readlines()
 
-FTP=matrix([[0.0]*1]*210)
-
-startData=0
-endData=210
-
-index=0
-
-N=len(lines)
-
-for i in range(N):
-    if((i >= startData) and (i < endData)):
-        content=np.array(lines[i].split()).astype('float')
-        FTP[index,0]=content[0]/100
-        index=index+1
-
-FTR=matrix([[0.0]*1]*210)
-
-for i in range(210):
-    FTR[i]=FTR1[i]*FTP[i]
 
 
 Y=matrix([[0.0]*5]*210)
@@ -132,98 +113,43 @@ from Bootstrap import bootstrap
 ##### Offensive Efficiency on Y axis
 
 figure()
-subplot(2,2,1)
+#subplot(2,2,1)
+
 
 plot(eFG,OE,'*')
-title("all: correlation = " + str(eFG_OEcorr),fontsize=14)
-xlabel("Effective Field Goal Percentage")
-ylabel("Offensive Efficiency")
+#title("all: correlation = " + str(eFG_OEcorr),fontsize=14)
+xlabel("Effective Field Goal Percentage",fontsize=24)
+ylabel("Offensive Efficiency",fontsize=24)
+title("eFG% vs OE", fontsize=30)
 
-subplot(2,2,2)
+#subplot(2,2,2)
+figure()
 
 plot(FTR,OE,'*')
-title("all: correlation = " + str(FTR_OEcorr),fontsize=14)
-xlabel("Free Throw Rate")
-ylabel("Offensive Efficiency")
+#title("all: correlation = " + str(FTR_OEcorr),fontsize=14)
+xlabel("Free Throw Rate",fontsize=24)
+ylabel("Offensive Efficiency",fontsize=24)
+title("FTR vs OE",fontsize=30)
 
-subplot(2,2,3)
+#subplot(2,2,3)
+figure()
 
 plot(TOR,OE,'*')
-title("all: correlation = " + str(TOR_OEcorr),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Offensive Efficiency")
+#title("all: correlation = " + str(TOR_OEcorr),fontsize=14)
+xlabel("Turnover Rate",fontsize=24)
+ylabel("Offensive Efficiency",fontsize=24)
+title("TOR vs OE", fontsize=30)
 
-subplot(2,2,4)
+#subplot(2,2,4)
+figure()
 
 plot(ORR,OE,'*')
-title("all: corr= " + str(ORR_OEcorr),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Offensive Efficiency")
+#title("all: corr= " + str(ORR_OEcorr),fontsize=14)
+xlabel("Offensive Rebound Rate",fontsize=24)
+ylabel("Offensive Efficiency",fontsize=24)
+title("ORR vs OE", fontsize=30)
 
-### top 50 ###
-
-figure()
-
-subplot(2,2,1)
-
-plot(top50[:,1],top50[:,0],'*')
-title("best: corr = " + str(corr_coef(top50[:,1],top50[:,0])),fontsize=14)
-xlabel("Effective Field Goal Percentage")
-ylabel("Offensive Efficiency")
-
-subplot(2,2,2)
-
-plot(top50[:,2],top50[:,0],'*')
-title("best: corr = " + str(corr_coef(top50[:,2],top50[:,0])),fontsize=14)
-xlabel("Free Throw Rate")
-ylabel("Offensive Efficiency")
-
-subplot(2,2,3)
-
-plot(top50[:,3],top50[:,0],'*')
-title("best: corr = " + str(corr_coef(top50[:,3],top50[:,0])),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Offensive Efficiency")
-
-subplot(2,2,4)
-
-plot(top50[:,4],top50[:,0],'*')
-title("best: corr = " + str(corr_coef(top50[:,4],top50[:,0])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Offensive Efficiency")
-
-### bottom 50 ###
-
-figure()
-
-subplot(2,2,1)
-
-plot(bottom50[:,1],bottom50[:,0],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,1],bottom50[:,0])),fontsize=14)
-xlabel("Effective Field Goal Percentage")
-ylabel("Offensive Efficiency")
-
-subplot(2,2,2)
-
-plot(bottom50[:,2],bottom50[:,0],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,2],bottom50[:,0])),fontsize=14)
-xlabel("Free Throw Rate")
-ylabel("Offensive Efficiency")
-
-subplot(2,2,3)
-
-plot(bottom50[:,3],bottom50[:,0],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,3],bottom50[:,0])),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Offensive Efficiency")
-
-subplot(2,2,4)
-
-plot(bottom50[:,4],bottom50[:,0],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,4],bottom50[:,0])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Offensive Efficiency")
-
+tickparams=tick_params(axis='both', length=5, labelsize=18)
 
 ############################################################
 ##### eFG on Y axis
@@ -233,74 +159,29 @@ figure()
        
 subplot(2,2,1)
 
-plot(FTR,eFG,'*')
+plot(top50[:,2],top50[:,1],'g*')
+plot(bottom50[:,2],bottom50[:,1],'r*')
 title("all: corr = " + str(FTR_eFGcorr),fontsize=14)
 xlabel("Free Throw Rate")
 ylabel("Effective Field Goal Percentage")
 
 subplot(2,2,2)
 
-plot(TOR,eFG,'*')
+plot(top50[:,3],top50[:,1],'g*')
+plot(bottom50[:,3],bottom50[:,1],'r*')
 title("all: corr = " + str(TOR_eFGcorr),fontsize=14)
 xlabel("Turnover Rate")
 ylabel("Effective Field Goal Percentage")
 
 subplot(2,2,3)
 
-plot(ORR,eFG,'*')
+plot(top50[:,4],top50[:,1],'g*')
+plot(bottom50[:,4],bottom50[:,1],'r*')
 title("all: corr = " + str(ORR_eFGcorr),fontsize=14)
 xlabel("Offensive Rebound Rate")
 ylabel("Effective Field Goal Percentage")
 
-### top 50 ###
 
-figure()
-
-subplot(2,2,1)
-
-plot(top50[:,2],top50[:,1],'*')
-title("best: corr = " + str(corr_coef(top50[:,2],top50[:,1])),fontsize=14)
-xlabel("Free Throw Rate")
-ylabel("Effective Field Goal Percentage")
-
-subplot(2,2,2)
-
-plot(top50[:,3],top50[:,1],'*')
-title("best: corr = " + str(corr_coef(top50[:,3],top50[:,1])),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Effective Field Goal Percentage")
-
-subplot(2,2,3)
-
-plot(top50[:,4],top50[:,1],'*')
-title("best: corr = " + str(corr_coef(top50[:,4],top50[:,1])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Effective Field Goal Percentage")
-
-### bottom 50 ###
-
-figure()
-
-subplot(2,2,1)
-
-plot(bottom50[:,2],bottom50[:,1],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,2],bottom50[:,1])),fontsize=14)
-xlabel("Free Throw Rate")
-ylabel("Effective Field Goal Percentage")
-
-subplot(2,2,2)
-
-plot(bottom50[:,3],bottom50[:,1],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,3],bottom50[:,1])),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Effective Field Goal Percentage")
-
-subplot(2,2,3)
-
-plot(bottom50[:,4],bottom50[:,1],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,4],bottom50[:,1])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Effective Field Goal Percentage")
 
 #########################################################
 ##### FTR and TOR on Y axis
@@ -309,14 +190,16 @@ figure()
 
 subplot(2,2,1)
 
-plot(TOR,FTR,'*')
+plot(top50[:,3],top50[:,2],'g*')
+plot(bottom50[:,3],bottom50[:,2],'r*')
 title("all: corr = " + str(TOR_FTRcorr),fontsize=14)
 xlabel("Turnover Rate")
 ylabel("Free Throw Rate")
 
 subplot(2,2,2)
 
-plot(ORR,FTR,'*')
+plot(top50[:,4],top50[:,2],'g*')
+plot(bottom50[:,4],bottom50[:,2],'r*')
 title("all: corr = " + str(ORR_FTRcorr),fontsize=14)
 xlabel("Offensive Rebound Rate")
 ylabel("Free Throw Rate")
@@ -324,63 +207,13 @@ ylabel("Free Throw Rate")
 
 subplot(2,2,3)
 
-plot(ORR,TOR,'*')
+plot(top50[:,4],top50[:,3],'g*')
+plot(bottom50[:,4],bottom50[:,3],'r*')
 title("all: corr = " + str(ORR_TORcorr),fontsize=14)
 xlabel("Offensive Rebound Rate")
 ylabel("Turnover Rate")
 
-### top 50
 
-figure()
-
-subplot(2,2,1)
-
-plot(top50[:,3],top50[:,2],'*')
-title("best: corr = " + str(corr_coef(top50[:,3],top50[:,2])),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Free Throw Rate")
-
-subplot(2,2,2)
-
-plot(top50[:,4],top50[:,2],'*')
-title("best: corr = " + str(corr_coef(top50[:,4],top50[:,2])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Free Throw Rate")
-
-subplot(2,2,3)
-
-plot(top50[:,4],top50[:,3],'*')
-title("best: corr = " + str(corr_coef(top50[:,4],top50[:,3])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Turnover Rate")
-
-
-### bottom 50 ###
-
-figure()
-
-subplot(2,2,1)
-
-plot(bottom50[:,3],bottom50[:,2],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,3],bottom50[:,2])),fontsize=14)
-xlabel("Turnover Rate")
-ylabel("Free Throw Rate")
-
-subplot(2,2,2)
-
-plot(bottom50[:,4],bottom50[:,2],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,4],bottom50[:,2])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Free Throw Rate")
-
-subplot(2,2,3)
-
-plot(bottom50[:,4],bottom50[:,3],'*')
-title("worst: corr = " + str(corr_coef(bottom50[:,4],bottom50[:,3])),fontsize=14)
-xlabel("Offensive Rebound Rate")
-ylabel("Turnover Rate")
-
-       
 show()
 
 

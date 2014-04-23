@@ -4,10 +4,13 @@ import numpy as np
 from sklearn.cluster import MeanShift, estimate_bandwidth
 from sklearn.datasets.samples_generator import make_blobs
 
+import StandardDeviation
+from StandardDeviation import StandDev
+
 ###############################################################################
 # Generate sample data
 centers = [[1, 1], [-1, -1], [1, -1]]
-X, _ = make_blobs(n_samples=50, centers=centers, cluster_std=.4)
+X, _ = make_blobs(n_samples=210, centers=centers, cluster_std=.5)
 
 ###############################################################################
 # Compute clustering with MeanShift

@@ -105,15 +105,22 @@ for i in range(len(eFGl)):
 
 ### General Formula: FGA+.44*FTR+TOR=1.000
 
+length=21
+
 SD=np.array([0.0]*21)
-ORarray=np.array([0.0]*210)
+ORarray=np.array([0.0]*length)
+
+for i in range(len(SD)):
+    SD[i]=.2*i-2
 
 sims=1000    #Number of simulations run (100 poss = 1 simulation)
 
-OffRatings=matrix([[0.0]*210]*sims)
+OffRatings=matrix([[0.0]*length]*sims)
 
-for i in range(210):
+for i in range(len(SD)):
 
+    j=SD[i]
+    
 
     ############################################################
     ###  Four Factors for an average NBA team in 2012-2013   ###
@@ -121,11 +128,11 @@ for i in range(210):
 
 
 
-    eFG=eFGl[i]      #Field goal percentage weighted for 3 point FGs
-    FTR=FTRl[i]        #Free throw rate (FTA/FGA)
-    TOR=TORl[i]        #Turnover rate (TO/poss)
-    ORR=ORRl[i]        #Offensive rebound rate
-    FTP=FTPl[i]        #League average FT%
+    eFG=eFGmean+j*eFGsd     #Field goal percentage weighted for 3 point FGs
+    FTR=FTRmean             #Free throw rate (FTA/FGA)
+    TOR=TORmean             #Turnover rate (TO/poss)
+    ORR=ORRmean            #Offensive rebound rate
+    FTP=FTPmean             #League average FT%
 
     FGA=(1-TOR)/(1+.44*FTR)  # % of possessions that result in a field goal possession
     FTA=1-FGA-TOR            # % of possessions that result in free throws
@@ -213,57 +220,81 @@ for i in range(210):
     FGP=float(FGM)/FGAtt #Field goal percentage
 
     OR=float(points)/sims   #Offensive Efficiency
-    
+
+    OR=OR+float(.3949*(eFGz[i]+1.78))
+    OR=OR+float(.0812*(-1*TORz[i]+1.78))
+    OR=OR+float(.2784*(FTRz[i]+1.78))
+    OR=OR+float(.2454*(-1*ORRz[i]+1.78))
 
     ORarray[i]=OR
 
     print i
+    #SD[i]=j
     
 
 
-error=matrix([[0.0]*1]*210)
+##error=np.array([0.0]*len(ORarray))
+##
+##for i in range(len(ORarray)):
+##    error[i]=OE[i]-ORarray[i]
+##
+##
+##import CorrelationCoefficient
+##from CorrelationCoefficient import corr_coef
+##
+##
+##eFGcorr=corr_coef(error,eFGz)
+##FTRcorr=corr_coef(error,FTRz)
+##TORcorr=corr_coef(error,TORz)
+##ORRcorr=corr_coef(error,ORRz)
+##
+##import Bootstrap
+##from Bootstrap import bootstrap
+##
+##eFGbs=bootstrap(error,eFGz)
+##FTRbs=bootstrap(error,FTRz)
+##TORbs=bootstrap(error,TORz)
+##ORRbs=bootstrap(error,ORRz)
+##
+##
+##total=eFGcorr+FTRcorr+fabs(TORcorr)+fabs(ORRcorr)
+##
+##eFGweight=eFGcorr/total
+##FTRweight=FTRcorr/total
+##TORweight=fabs(TORcorr)/total
+##ORRweight=fabs(ORRcorr)/total
 
-for i in range(210):
-    error[i]=OE[i]-ORarray[i]
 
 
-import CorrelationCoefficient
-from CorrelationCoefficient import corr_coef
 
 
-eFGcorr=corr_coef(error,eFGz)
-FTRcorr=corr_coef(error,FTRz)
-TORcorr=corr_coef(error,TORz)
-ORRcorr=corr_coef(error,ORRz)
+UC=np.array([0.0]*21)
 
-import Bootstrap
-from Bootstrap import bootstrap
-
-eFGbs=bootstrap(error,eFGz)
-FTRbs=bootstrap(error,FTRz)
-TORbs=bootstrap(error,TORz)
-ORRbs=bootstrap(error,ORRz)
-    
-#    SD[i]=j
+for i in range(21):
+    a=sorted(OffRatings[:,i])
+    UC[i]=(a[(int(.84*len(OffRatings)))]-a[(int(.16*len(OffRatings)))])/2
 
 
-#UC=np.array([0.0]*21)
+slope,b=polyfit(SD,ORarray,1)
+x=arange(-2,2.01,.2)
+y=np.array([0.0]*21)
 
-#for i in range(21):
-#    a=sorted(OffRatings[:,i])
-#    UC[i]=(a[(int(.95*len(OffRatings)))]-a[(int(.05*len(OffRatings)))])/2
-
-
-#slope,b=polyfit(SD,ORarray,1)
-
-#figure()
-#errorbar(SD,array(ORarray), yerr=array(UC), fmt='ro',label='95% confidence')
+figure()
+plot(SD,ORarray,'*')
+#errorbar(SD,array(ORarray), yerr=array(UC), fmt='ro',label='68% confidence')
 #legend(bbox_to_anchor=(0.50,.95),loc=6,borderaxespad=0,fontsize=16)
-#xlabel=('z score')
-#ylabel=('Offensive Efficiency (Pts/100 poss)')
-#title=('Effect of changing eFG% on OE')
+ylim(95,115)
+xlabel('z score',fontsize=24)
+ylabel('Offensive Efficiency (Pts/100 poss)',fontsize=24)
+title('Effect of changing eFG% on OE',fontsize=30)
+tickparams=tick_params(axis='both', length=5, labelsize=18)
 
+for i in range(len(x)):
+    y[i]=slope*x[i]+b
 
-#show()
+plot(x,y)
 
-#print slope
+show()
+
+print slope
+

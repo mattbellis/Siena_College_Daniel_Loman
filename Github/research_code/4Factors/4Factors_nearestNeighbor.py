@@ -6,6 +6,9 @@ import matplotlib
 import pylab
 from pylab import *
 
+import StandardDeviation
+from StandardDeviation import StandDev
+
 #############################
 ###    IMPORTING DATA     ###
 #############################
@@ -17,7 +20,7 @@ lines=infile.readlines()
 
 OE=matrix([[0.0]*1]*210)
 eFG=matrix([[0.0]*1]*210)
-FTR1=matrix([[0.0]*1]*210)
+FTR=matrix([[0.0]*1]*210)
 TOR=matrix([[0.0]*1]*210)
 ORR=matrix([[0.0]*1]*210)
 
@@ -33,36 +36,12 @@ for i in range(N):
         content=np.array(lines[i].split()).astype('float')
         OE[index,0]=content[0]
         eFG[index,0]=content[1]/100
-        FTR1[index,0]=content[2]/100
+        FTR[index,0]=content[2]/10000
         TOR[index,0]=content[3]/100
         ORR[index,0]=content[4]/100
         index=index+1
 
 
-a=glob.glob('/Users/DanLo1108/Documents/AdvancedLab/Data Files/FTP.txt')
-b=str(a[0])
-infile=open(b,'r')
-lines=infile.readlines()
-
-FTP=matrix([[0.0]*1]*210)
-
-startData=0
-endData=210
-
-index=0
-
-N=len(lines)
-
-for i in range(N):
-    if((i >= startData) and (i < endData)):
-        content=np.array(lines[i].split()).astype('float')
-        FTP[index,0]=content[0]/100
-        index=index+1
-
-FTR=matrix([[0.0]*1]*210)
-
-for i in range(210):
-    FTR[i]=FTR1[i]*FTP[i]
 
 
 ##########################################################################
@@ -76,9 +55,9 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 from sklearn.datasets.samples_generator import make_blobs
 
 
-percent=.20
+percent=.25
 
-good_bad="good"
+good_bad="bad"
 
 Y=matrix([[0.0]*5]*210)
 
